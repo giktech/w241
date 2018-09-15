@@ -23,13 +23,30 @@ Some guidelines for submitting problem sets in this course:
 
 - Explain the notation $Y_{i}(1)$.
 
+Answer: The notation denotes the outcome of the treatment on subject "i" in the experiment.
+
 - Explain the notation $E[Y_{i}(1)|d_{i}=0]$.
+
+Answer: This denotes the average (Expectation) of potential treatment outcome when a subject is selected randomly from subjects that are not exposed to the treatment.
 
 - Explain the difference between the notation $E[Y_{i}(1)]$ and the notation $E[Y_{i}(1)|d_{i}=1]$.
 (Extra credit) 
 
+Answer: 
+Former is Expection of $Y_{i}(1)$ (outcome of treatment on a subject) when a subject is chosen at random from the entire set. 
+Latter is Expectation of $Y_{i}(1)$ (outcome of treatment on a subject) when a subject is chosen at random from those that were actualy treated.
+
+
 - Explain the difference between the notation $E[Y_{i}(1)|d_{i}=1]$ and the notation 
 $E[Y_{i}(1)|D_{i}=1]$.  Use exercise 2.7 from FE to give a concrete example of the difference.
+
+Answer: 
+Former is the Expectation of $Y_{i}(1)$ (outcome of treatment on a subject) when a subject is chosen at random from those that were actually treated.
+
+Latter is the Expectation of above calculated Expectation over all possible d vectors (all possible distributions assigning subjects randomly to control or treatment)
+
+TBD
+
 
 # 2. Potential Outcomes Practice
 Use the values in the following table to illustrate that $E[Y_{i}(1)] - E[Y_{i}(0)] = E[Y_{i}(1) - Y_{i}(0)]$.
@@ -52,6 +69,16 @@ Use the values in the following table to illustrate that $E[Y_{i}(1)] - E[Y_{i}(
 |Individual 5   |  10        |  8         |  -2      |                          
 |               |            |            |          |                      
 +---------------+------------+------------+----------+
+
+Answer: 
+From the table above:
+
+$E[Y_{i}(1)] - E[Y_{i}(0)] = 39/5 - 33/5 = 6/5 $
+
+$ E[Y_{i}(1) - Y_{i}(0)] = (1+5+2+0_2)/5 = 6/5 $
+
+Values are the same
+
 
 # 3. Conditional Expectations
 
