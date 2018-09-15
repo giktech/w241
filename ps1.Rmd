@@ -1,6 +1,6 @@
 ---
 title: "Problem Set #1"
-author: "Experiments and Causality"
+author: "Gaurav Khanna"
 date: \today
 output: pdf_document
 ---
