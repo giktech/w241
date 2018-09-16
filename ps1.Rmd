@@ -42,10 +42,9 @@ $E[Y_{i}(1)|D_{i}=1]$.  Use exercise 2.7 from FE to give a concrete example of t
 
 Answer: 
 Former is the Expectation of $Y_{i}(1)$ (outcome of treatment on a subject) when a subject is chosen at random from those that were actually treated.
-
 Latter is the Expectation of above calculated Expectation over all possible d vectors (all possible distributions assigning subjects randomly to control or treatment)
 
-TBD
+Exercise 2.7 talks about selecting 2 of 7 villages for the treatment group in a random manner (say village 3 and 7). $E[Y_{i}(1)|d_{i}=1]$ would be the average outcome (of treatment) for these 2 villages. The selection of 2 can be done in 2C7 ways though. Further, the groups could be all sizes from 1 to 6 from within the 7 villages. This'll give us about 1c7 + 2c7.........6c7 ways to allocate between treatment and control. $E[Y_{i}(1)|D_{i}=1]$ would be the expectation of expectations for each of this selection vector (i.e. Expectation of $E[Y_{i}(1)|d_{i}=1]$ over all the ways of selection a group of size > 1 from the 7 villages)
 
 
 # 2. Potential Outcomes Practice
@@ -349,6 +348,10 @@ Answer:
 ${E[Y_{i}(0)|D_{i}=0] = E[Y_{i}(0)|D_{i}=1]}$ means that the outcome (violence) on less reading when the inmates actually read less would be the same as the violence on reading less for inmates who actually read more
 
 $E{[Y_{i}(1)|D_{i}=0] = E[Y_{i}(1)|D_{i}=1]}$? means that the outcome(violence) on reading more when the inmates actually read less would be the same as the violence on reading more for inmates who actually read more
+
+Together, the expressions are asking if the inmates who read less are comparable to inmates who read more?
+I'll be hesitant in assuming these equalities. Intuitively, It feels that the inmates who read less would have a different nature and preferences (human) than the inmates who read more. This  confounding factor may lead to different results when such a population (those who naturally read less or more) are driven to do something different in the experiment. It could be that inmates who naturally read more could be very irritated and violent when asked to limit reading or may be they are so peace loving that there encounters would not change irrespective of the time spend on reading. 
+
 
 
 
