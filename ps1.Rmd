@@ -1,8 +1,10 @@
 ---
-title: "Problem Set #1"
+title: 'Problem Set #1'
 author: "Gaurav Khanna"
-date: \today
-output: pdf_document
+date: "\today"
+output:
+  word_document: default
+  pdf_document: default
 ---
 <!--
 Some guidelines for submitting problem sets in this course:
@@ -179,11 +181,11 @@ plot.default(answer.POa)
 
 ```
 
-** Answer: The treatment(outside play) shows no impact for 8/10 subjects. one subject shows a dramatic positive effect(.6-.1=.5) and one subject shows a somewhat less dramatic negative effect(.7-1.6 = .9). Both the impacted subjects seem to be at the edges of what appears to be the normal range (though no impact for y(0) = 2, negates this line of thinking). The effect at the edges could be errors in reporting, data capture or some other change in the context of the subjects. Entry errors are very likely as the measurements are hypothetical (at least for one of y(0) and y(1) since both cannot be measured for the same person). Overall, The individual treatment effect calculation does not lead to a good thesis on the impact of playing outside. A casual observation could be that the treatment (playing outside) has no impact on vision. **
+** Answer: The treatment(outside play) shows no impact for 8/10 subjects. one subject shows a dramatic positive effect(.6-.1=.5) and one subject shows a somewhat less dramatic negative effect(.7-1.6 = .9). Both the impacted subjects seem to be at the edges of what appears to be the normal range (though no impact for y(0) = 2, negates this line of thinking). The effect at the edges could be errors in reporting, data capture or some other change in the context of the subjects (confounding factors...say looking at the sun for case with negative treatment effect). Entry errors are very likely as the measurements are hypothetical (at least for one of y(0) and y(1) since both cannot be measured for the same person). Overall, The individual treatment effect calculation does not lead to a good thesis on the impact of playing outside. A casual observation could be that the treatment (playing outside) has no impact on vision. **
 
 c. What might cause some children to have different treatment effects than others?
 
-** Answer: The differences could be explained by measurement, reporting or data capture errors. If we assume that one measurement is real and one hypothetical, the differneces could also just be the normal deviation in the sample.** 
+** Answer: The differences could be due to confounding factors or a natural impact of treatment on edge cases. The edge readings could also be due to data capture errors, though its less likely as some of the measurements are hypothetical **
 
 
 d. For this population, what is the true average treatment effect (ATE) of playing outside.
@@ -232,10 +234,20 @@ answer.POe - answer.POd
 
 g. We just considered one way (odd-even) an experiment might split the children. How many different ways (every possible way) are there to split the children into a treatment versus a control group (assuming at least one person is always in the treatment group and at least one person is always in the control group)?
 
-** Answer: The split can be made in 1C10 + 2C10 + 3C10.........9C10 ways **
+** Answer: The split can be made in 1C10 + 2C10 + 3C10.........9C10 = 1022 ways. Calculation below **
 
 ```{r, echo = F}
-answer.POg <- NA
+
+# Adding up all the ways to choose a group of at least 1 from 10
+it <- 0
+n <- length(answer.POa)
+for(r in 2:n-1) {
+  it <- it + choose(n, r)
+}
+answer.POg <- it
+answer.POg
+
+
 ```
 
 h. Suppose that we decide it is too hard to control the behavior of the children, so we do an observational study instead.  Children 1-5 choose to play an average of more than 10 hours per week from age 3 to age 6, while Children 6-10 play less than 10 hours per week.  Compute the difference in means from the resulting observational data.
@@ -261,7 +273,7 @@ answer.POh
 i. Compare your answer in (h) to the true ATE.  Intuitively, what causes the difference?
 
 ** Answer: The estimate is 10 times smaller (Estimate is a much larger negative number) than the true ATE. calculations are below **
-TBD
+** The diffrence is due to different group membership. In this specific manner of assignment the treatment group has all the cases that are showing any impact of treatment. The control group is left with 0 ATE cases **
 
 ```{r, echo=FALSE}
 # Difference between the estimate and truth (both calculated above)
