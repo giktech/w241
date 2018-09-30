@@ -80,14 +80,22 @@ summarize(success1, count=n(), viewSum=sum(views), viewMean=mean(views))
 
 ```{r}
 # Randomizing the success variable
-# We'll block on the success variable
+# randomize() from the expriments library, returns the "randomize" class
+# randomize() creates 2 groups treatment and control which is sufficient for us in this case
+# It is equivalent to us randomizing among 0 and 1 for "success" variable
+# We are not doing any blocking, so subjects in a group can be variable
 successr <- randomize(success1)
 ```
 
 
 ```{r}
+# Some statistics on the classes after randomization
+# We're choosing to pick equal numbers in the 2 classes
 head(successr$treatment)
+table(success1$success)
+table(successr$treatment)
 ```
+
 ```{r}
 # Modifying est.ate to use the object of "randomize" class
 est.mate <- function(result, treat) { 
@@ -95,25 +103,35 @@ est.mate <- function(result, treat) {
   } 
 ```
 
+
 ```{r}
-# ATE for 1 randomization
+# ATE for 1 randomization for testing
 ateR <- est.mate(successr$data$views, successr$treatment)
 ateR
+# This is very different from our ATE
 ```
 ```{r}
 # Repeating the expriment 10,000 times
 distribution.under.sharp.null <- replicate(10000, est.mate(successr$data$views, (randomize(success1))$treatment))
+
+# Average estimate for the ATE
+mean(distribution.under.sharp.null)
+# Again, very different from ATE
 ```
 ```{r}
+# Graph for the estimates
 plot(density(distribution.under.sharp.null), 
      main = "Density under Sharp Null")
+# Almost a normal distribution
 ```
 ```{r}
+# Histogram for the distribution
 hist(distribution.under.sharp.null, 
      main = "Histogram under Sharp Null")
 ```
 
 ```{r}
+# More analysis on the distribution. Plotting the p value
 par(mfrow = c(1,2))
 plot(density(distribution.under.sharp.null), 
      main = "Density Plot of ATE")
@@ -169,22 +187,47 @@ One way to measure legislative production is to count the number of bills (legis
 ```{r}
 library(foreign)
 
-d <- read.dta("./data/Titiunik.2010.dta")
-head(d)
+d2 <- read.dta("./data/Titiunik.2010.dta")
+head(d2)
 ```
 
 a. Using either `dplyr` or `data.table`, group the data by state and report the mean number of bills introduced in each state. Does Texas or Arkansas seem to be more productive? Then, group by two- or four-year terms (ignoring states). Do two- or four-year terms seem to be more productive? **Which of these effects is causal, and which is not?** Finally, using `dplyr` or `data.table` to group by state and term-length. How, if at all, does this change what you learn? 
 
 ```{r}
+# Grouping the data by state
+state <- group_by(d2, texas0_arkansas1)
+head(state)
+
+# Mean number of bills introduced in each state
+summarize(state, meanBills=mean(bills_introduced))
+
+# Which state looks more productive
 
 ```
-
+**Texas has a mean of 68.77 compared to 25.51 for Arkansas. Texas seems to be more productive in bills**
 
 ```{r}
+# Grouping by terms
+terms <- group_by(d2, term2year)
+head(terms)
+
+# Mean number of bills by terms
+summarize(terms, meanBills=mean(bills_introduced))
+
+# Which term is more effective
 
 ```
-
+** 
 ```{r}
+# Grouping by state and term term
+stateTerms <- group_by(d2, texas0_arkansas1, term2year)
+head(stateTerms)
+
+# Mean number of bills by grouping
+summarize(stateTerms, meanBills=mean(bills_introduced))
+
+# Which groupings indicate more effectiveness? 
+# TODO
 
 ```
 
@@ -192,12 +235,85 @@ a. Using either `dplyr` or `data.table`, group the data by state and report the 
 b. For each state, estimate the standard error of the estimated ATE. 
 
 ```{r}
+# Separating out the states
+texas <- state[which(state$texas0_arkansas1==0),]
+head(texas)
+arkansas <- state[which(state$texas0_arkansas1==1),]
+head(arkansas)
+```
 
+```{r}
+# ATE for Texas
+texas_ate <- est.ate(texas$bills_introduced, texas$term2year)
+texas_ate
+
+# Considering the distribution with other random assignments
+# We'll randomize the term variable. "2 years" is our treatment
+# Since the grouping is binary, randomization of the entire dataset should work
+texas_r <- randomize(texas)
+
+
+```
+
+
+```{r}
+# Repeating the expriment 10,000 times
+distribution.under.sharp.null.texas <- replicate(10000, est.mate(texas_r$data$bills_introduced, (randomize(texas))$treatment))
+```
+```{r}
+plot(density(distribution.under.sharp.null.texas), 
+     main = "Density under Sharp Null")
+
+```
+
+```{r}
+# average estimated ate for texas
+mean(distribution.under.sharp.null.texas)
+
+# Standard error is the square root of the averaged squared deviation (from the average EST estimate)
+head(distribution.under.sharp.null.texas)
+se_texas <- sqrt(mean((distribution.under.sharp.null.texas-mean(distribution.under.sharp.null.texas))^2))
+se_texas
+
+
+
+```
+
+```{r}
+# ATE for arkansas
+arkansas_ate <- est.ate(arkansas$bills_introduced, arkansas$term2year)
+arkansas_ate
+
+# Considering the distribution with other random assignments
+# We'll randomize the term variable. "2 years" is our treatment
+# Since the grouping is binary, randomization of the entire dataset should work
+arkansas_r <- randomize(arkansas)
+
+
+```
+
+```{r}
+# Repeating the expriment 10,000 times
+distribution.under.sharp.null.arkansas <- replicate(10000, est.mate(arkansas_r$data$bills_introduced, (randomize(arkansas))$treatment))
+```
+```{r}
+plot(density(distribution.under.sharp.null.arkansas), 
+     main = "Density under Sharp Null")
+```
+```{r}
+# average estimated ate for arkansas
+mean(distribution.under.sharp.null.arkansas)
+
+# Standard error is the square root of the averaged squared deviation (from the average EST estimate)
+head(distribution.under.sharp.null.arkansas)
+se_arkansas <- sqrt(mean((distribution.under.sharp.null.arkansas-mean(distribution.under.sharp.null.arkansas))^2))
+se_arkansas
 ```
 
 c. Use equation (3.10) to estimate the overall ATE for both states combined. 
 
 ```{r}
+
 
 ```
 
