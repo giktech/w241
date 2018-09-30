@@ -6,12 +6,15 @@ output:
 ---
 
 
-```{r setup, include=FALSE}
+```{r setup}
 library(data.table)
 library(dplyr)
 ```
-<!--
 
+```{r}
+library(experiment)
+```
+<!--
 Some guidelines for submitting problem sets in this course:
 
 - Please submit a PDF document rather than a Word document or a Google document.
@@ -32,45 +35,127 @@ On the one hand, participating in a common task with a diverse group of pilgrims
 Using the data here, test the sharp null hypothesis that winning the visa lottery for the pilgrimage to Mecca had no effect on the views of Pakistani Muslims toward people from other countries. Assume that the Pakistani authorities assigned visas using complete random assignment. Use, as your primary outcome the `views` variable, and as your treatment feature `success`. If you're ambitious, write your fucntion generally so that you can also evaluate feeligns toward specific nationalities.
 
 ```{r}
+# Dataframe from the CSV
 d <- read.csv("./data/Clingingsmith.2009.csv", stringsAsFactors = FALSE)
 
 ```
 a. Using either `dplyr` or `data.table`, group the data by `success` and report whether views toward others are generally more positive among lottery winners or lottery non-winners. 
+```{r}
+head(d)
+```
 
 ```{r}
+# Grouping data by success
+# success <-group_by(d, success)
+# TODO: Chaining the operations is more elegant but i'd like to see the intermediate
+success <- group_by(d, success)
+summarize(success, count=n(), viewSum=sum(views), viewMean=mean(views))
+```
+The **mean of views among lottery winners and losers is 2.34 and 1.86 respcetively**. The **views for others generally look more positive among the lottery winners**
 
+```{r}
+# Estimate ATE function
+est.ate <- function(result, treat) { 
+  mean(result[treat==1]) - mean(result[treat==0])
+  } 
+```
+```{r}
+ate <- est.ate(success$views, success$success) 
+ate
 ```
 
 b. But is this a meaningful difference, or could it just be randomization noise? Conduct 10,000 simulated random assignments under the sharp null hypothesis to find out. (Don't just copy the code from the async, think about how to write this yourself.) 
 
 ```{r}
+# Sharp null allows us to complete the data, y(0) and y(1) from the data we already have
+# We just need to randomize the success variable
+# Creating a new data frame to try randomization on the orgiginal data
+# The original is kept around intact for reference
+dr <- read.csv("./data/Clingingsmith.2009.csv", stringsAsFactors = FALSE)
+head(dr)
+success1 <- group_by(dr, success)
+summarize(success1, count=n(), viewSum=sum(views), viewMean=mean(views))
 
+```
+
+```{r}
+# Randomizing the success variable
+# We'll block on the success variable
+successr <- randomize(success1)
+```
+
+
+```{r}
+head(successr$treatment)
+```
+```{r}
+# Modifying est.ate to use the object of "randomize" class
+est.mate <- function(result, treat) { 
+  mean(result[treat=="Treat"]) - mean(result[treat=="Control"])
+  } 
+```
+
+```{r}
+# ATE for 1 randomization
+ateR <- est.mate(successr$data$views, successr$treatment)
+ateR
+```
+```{r}
+# Repeating the expriment 10,000 times
+distribution.under.sharp.null <- replicate(10000, est.mate(successr$data$views, (randomize(success1))$treatment))
+```
+```{r}
+plot(density(distribution.under.sharp.null), 
+     main = "Density under Sharp Null")
+```
+```{r}
+hist(distribution.under.sharp.null, 
+     main = "Histogram under Sharp Null")
+```
+
+```{r}
+par(mfrow = c(1,2))
+plot(density(distribution.under.sharp.null), 
+     main = "Density Plot of ATE")
+abline(v = ate, col = "blue")
+hist(distribution.under.sharp.null, 
+     main = "Histogram of ATE", 
+     freq = FALSE)
+abline(v = ate, col = "blue")
 ```
 
 c. How many of the simulated random assignments generate an estimated ATE that is at least as large as the actual estimate of the ATE? 
 
 ```{r}
-
-
+# num of assignments that generate an estimated ATE at least as large as the actual
+n <- sum(distribution.under.sharp.null >= ate)
+n
 ```
 
 d. What is the implied *one-tailed* p-value? 
 
 ```{r}
-
+# p-value
+m <- mean(distribution.under.sharp.null >= ate )
+m
 
 ```
 
 e. How many of the simulated random assignments generate an estimated ATE that is at least as large *in absolute value* as the actual estimate of the ATE? 
 
 ```{r}
+# num of simulated random assignments with an estimated ATE that is at least as large *in absolute value* as the actual estimate of the ATE
+na <- sum(abs(distribution.under.sharp.null) >= ate)
+na
 
 ```
 
 f. What is the implied two-tailed p-value? 
 
 ```{r}
-
+# 2 tailed p-value
+ma <- mean(abs(distribution.under.sharp.null) >= ate )
+ma
 ```
 
 # 2. Term Limits Aren't Good. 
