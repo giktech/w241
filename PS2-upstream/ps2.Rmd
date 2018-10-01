@@ -199,7 +199,7 @@ state <- group_by(d2, texas0_arkansas1)
 head(state)
 
 # Mean number of bills introduced in each state
-summarize(state, meanBills=mean(bills_introduced))
+summarize(state, count=n(), meanBills=mean(bills_introduced))
 
 # Which state looks more productive
 
@@ -262,9 +262,14 @@ distribution.under.sharp.null.texas <- replicate(10000, est.mate(texas_r$data$bi
 ```
 ```{r}
 plot(density(distribution.under.sharp.null.texas), 
-     main = "Density under Sharp Null")
+     main = "Density under Sharp Null for Texas")
 
 ```
+```{r}
+hist(distribution.under.sharp.null.texas, 
+     main = "Histogram under Sharp Null for Texas")
+```
+
 
 ```{r}
 # average estimated ate for texas
@@ -298,8 +303,13 @@ distribution.under.sharp.null.arkansas <- replicate(10000, est.mate(arkansas_r$d
 ```
 ```{r}
 plot(density(distribution.under.sharp.null.arkansas), 
-     main = "Density under Sharp Null")
+     main = "Density under Sharp Null for arkansas")
 ```
+```{r}
+hist(distribution.under.sharp.null.arkansas, 
+     main = "Histogram under Sharp Null for Arkansas")
+```
+
 ```{r}
 # average estimated ate for arkansas
 mean(distribution.under.sharp.null.arkansas)
@@ -313,6 +323,17 @@ se_arkansas
 c. Use equation (3.10) to estimate the overall ATE for both states combined. 
 
 ```{r}
+# ATE for both sides combined
+# Recalling the original and then using 3.10
+texas_ate
+arkansas_ate
+nrow(texas)
+nrow(arkansas)
+nrow(d2)
+
+# Combined ATE
+comb_ate <- (texas_ate*nrow(texas)/nrow(d2)) + (arkansas_ate*nrow(arkansas)/nrow(d2))
+comb_ate
 
 
 ```
@@ -322,16 +343,64 @@ d. Explain why, in this study, simply pooling the data for the two states and co
 e. Insert the estimated standard errors into equation (3.12) to estimate the stand error for the overall ATE. 
 
 ```{r}
+# Recalling previous values and then putting them in 3.12 for combined SE
+se_texas
+se_arkansas
+se_comb <- sqrt((nrow(texas)*se_texas/nrow(d2))^2 + (nrow(arkansas)*se_arkansas/nrow(d2))^2)
+se_comb
 
 ```
 
 f. Use randomization inference to test the sharp null hypothesis that the treatment effect is zero for senators in both states. 
 
 ```{r}
+# Randomization inference to test the sharp null hypothesis (treatment effect is 0 in Texas)
 
+# We have the results of 10,000 randomizations above in distribution.under.sharp.null.texas
+head(distribution.under.sharp.null.texas)
+# We also have the ate from the actual expriment
+texas_ate
+# One tailed p value
+p_one_texas <- mean(distribution.under.sharp.null.texas >= texas_ate )
+p_one_texas
+# Two tailed p value
+p_two_texas <- mean(abs(distribution.under.sharp.null.texas) >= texas_ate)
+p_two_texas
 ``` 
+```{r}
+# Randomization inference to test the sharp null hypothesis (treatment effect is 0 in Arkansas)
+
+# We have the results of 10,000 randomizations above in distribution.under.sharp.null.texas
+head(distribution.under.sharp.null.arkansas)
+# We also have the ate from the actual expriment
+arkansas_ate
+# One tailed p value
+p_one_arkansas <- mean(distribution.under.sharp.null.arkansas >= arkansas_ate )
+p_one_arkansas
+# Two tailed p value
+p_two_arkansas <- mean(abs(distribution.under.sharp.null.texas) >= arkansas_ate)
+p_two_arkansas
+```
 
 g. **IN Addition:** Plot histograms for both the treatment and control groups in each state (for 4 histograms in total).
+```{r}
+# Histogram for control and Treatment in Texas
+hist(texas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,140), ylim = c(0,6), col = "red", border = F, main = "Distribution of bills_introduced under control and treatment in Texas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
+hist(texas[which(state$term2year == 1),]$bills_introduced, xlim = c(0, 140), ylim = c(0,6), col= "green", add = T, density = 10, angle = 45)
+legend('topleft',c('Control','Treatment'),
+       fill = c("red", "green"), bty = 'n',
+       border = NA)
+
+```
+
+```{r}
+# Histogram for control and treatment in Arkansas
+hist(arkansas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,70), ylim = c(0,10), col = "red", border = F, main = "Distribution of bills_introduced under control and treatment in Arkansas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
+hist(arkansas[which(state$term2year == 1),]$bills_introduced, xlim = c(0, 70), ylim = c(0,10), col= "green", add = T, density = 10, angle = 45)
+legend('topright',c('Control','Treatment'),
+       fill = c("red", "green"), bty = 'n',
+       border = NA)
+```
 
 # 3. Cluster Randomization
 Use the data in *Field Experiments* Table 3.3 to simulate cluster randomized assignment. (*Notes: (a) Assume 3 clusters in treatment and 4 in control; and (b) When Gerber and Green say ``simulate'', they do not mean ``run simulations with R code'', but rather, in a casual sense ``take a look at what happens if you do this this way.'' There is no randomization inference necessary to complete this problem.*)
