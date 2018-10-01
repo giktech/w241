@@ -385,20 +385,20 @@ p_two_arkansas
 g. **IN Addition:** Plot histograms for both the treatment and control groups in each state (for 4 histograms in total).
 ```{r}
 # Histogram for control and Treatment in Texas
-hist(texas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,140), ylim = c(0,6), col = "red", border = F, main = "Distribution of bills_introduced under control and treatment in Texas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
+hist(texas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,140), ylim = c(0,6), col = "blue", border = F, main = "Distribution of bills_introduced under control and treatment in Texas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
 hist(texas[which(state$term2year == 1),]$bills_introduced, xlim = c(0, 140), ylim = c(0,6), col= "green", add = T, density = 10, angle = 45)
 legend('topleft',c('Control','Treatment'),
-       fill = c("red", "green"), bty = 'n',
+       fill = c("blue", "green"), bty = 'n',
        border = NA)
 
 ```
 
 ```{r}
 # Histogram for control and treatment in Arkansas
-hist(arkansas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,70), ylim = c(0,10), col = "red", border = F, main = "Distribution of bills_introduced under control and treatment in Arkansas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
+hist(arkansas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,70), ylim = c(0,10), col = "blue", border = F, main = "Distribution of bills_introduced under control and treatment in Arkansas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
 hist(arkansas[which(state$term2year == 1),]$bills_introduced, xlim = c(0, 70), ylim = c(0,10), col= "green", add = T, density = 10, angle = 45)
 legend('topright',c('Control','Treatment'),
-       fill = c("red", "green"), bty = 'n',
+       fill = c("blue", "green"), bty = 'n',
        border = NA)
 ```
 
@@ -408,22 +408,124 @@ Use the data in *Field Experiments* Table 3.3 to simulate cluster randomized ass
 
 ```{r}
 ## load data 
-d <- read.csv("./data/ggChapter3.csv", stringsAsFactors = FALSE)
+d3 <- read.csv("./data/ggChapter3.csv", stringsAsFactors = FALSE)
 ```
 
 a. Suppose the clusters are formed by grouping observations {1,2}, {3,4}, {5,6}, ... , {13,14}. Use equation (3.22) to calculate the standard error assuming half of the clusters are randomly assigned to treatment. 
 
 ```{r} 
+# Add the cluster ID to data
+d3$cluster <- NA
+# Assign the clusters for "a"
+d3$cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7)
+head(d3)
+```
+
+```{r}
+# pull out the cluster ID's
+all_clusters <- unique(d3$cluster)
+all_clusters
+# Number of clusters in treatment
+clusters.in.treatment <- 3
+# Randomize based on unique cluster ID's
+randomize.clusters <- function(d) {
+  treat.clusters <- sample(x = all_clusters, 
+                                size = clusters.in.treatment, 
+                                replace = FALSE)
+  return(as.numeric(d$cluster %in% treat.clusters))
+}
+
+# Trying out one randomization. Now we have the data prepared for the experiment
+d3$treatment <- randomize.clusters(d3)
+
+# QUESTION & TODO More randomizations to get an estimate. For now just treating it as one expriment
+
+clusters <- group_by(d3, cluster)
+clusters.summary <- summarize(clusters, count=n(), mean_y=mean(Y), mean_d=mean(D), treatment=sum(treatment)/2 )
+clusters.summary
 
 ```
+
+```{r}
+
+# QUESTION When calculating variances, are we calculating among all the clusters or clusters in control and treatment respectively? My assumption is that we are doing it among all the clusters, just like in the book where the example (page 56) shows the Formulaes that take into account the entire N
+
+# Variance in y(0) clustered
+variance_y <- (sum((clusters.summary$mean_y - mean(clusters.summary$mean_y))^2))/nrow(clusters.summary)
+variance_y
+
+# Variance in y(1) clustered
+variance_d <- (sum((clusters.summary$mean_d - mean(clusters.summary$mean_d))^2))/nrow(clusters.summary)
+variance_d
+
+# Covariance among y(0) and Y(1)
+covariance <- sum((clusters.summary$mean_y - mean(clusters.summary$mean_y))*(clusters.summary$mean_d - mean(clusters.summary$mean_d)))/nrow(clusters.summary)
+covariance
+```
+```{r}
+# applying 3.22
+
+# m is subjects in treatment (not clusters). N is count of subjects, number of clusters is 7
+m <- clusters.in.treatment * 2
+m
+N <- nrow(d3)
+N
+nrow(clusters.summary)
+
+se <- sqrt(((m*variance_y/N-m) + ((N-m)*variance_d/m) + 2*covariance)/nrow(clusters.summary))
+se
+
+```
+**The standard error for one randomization (3 groups in treatment) is 3.885473**
 
 b. Suppose that clusters are instead formed by grouping observations {1,14}, {2,13}, {3,12}, ... , {7,8}. Use equation (3.22) to calculate the standard error assuming half of the clusters are randomly assigned to treatment. 
 
 ```{r} 
+# repeating by grouping the observations in a different way
+d4 <- read.csv("./data/ggChapter3.csv", stringsAsFactors = FALSE)
+# Add the cluster ID to data
+d4$cluster <- NA
+# Assign the clusters for "a"
+d4$cluster <- c(1,2,3,4,5,6,7,7,6,5,4,3,2,1)
+head(d4)
+# Trying out one randomization. Now we have the data prepared for the experiment
+d4$treatment <- randomize.clusters(d4)
+# Grouping by the cluster and creating the summary
+clusters <- group_by(d4, cluster)
+clusters.summary <- summarize(clusters, count=n(), mean_y=mean(Y), mean_d=mean(D), treatment=sum(treatment)/2 )
+clusters.summary
+# Variance in y(0) clustered
+variance_y <- (sum((clusters.summary$mean_y - mean(clusters.summary$mean_y))^2))/nrow(clusters.summary)
+variance_y
 
+# Variance in y(1) clustered
+variance_d <- (sum((clusters.summary$mean_d - mean(clusters.summary$mean_d))^2))/nrow(clusters.summary)
+variance_d
+
+# Covariance among y(0) and Y(1)
+covariance <- sum((clusters.summary$mean_y - mean(clusters.summary$mean_y))*(clusters.summary$mean_d - mean(clusters.summary$mean_d)))/nrow(clusters.summary)
+covariance
+
+# applying 3.22
+
+# m is subjects in treatment (not clusters). N is count of subjects, number of clusters is 7
+m <- clusters.in.treatment * 2
+m
+N <- nrow(d4)
+N
+nrow(clusters.summary)
+
+se <- sqrt(((m*variance_y/N-m) + ((N-m)*variance_d/m) + 2*covariance)/nrow(clusters.summary))
+se
 ``` 
 
 c. Why do the two methods of forming clusters lead to different standard errors? What are the implications for the design of cluster randomized experiments? 
+
+**The methods lead to different standard errors due to differences in the cluster means (for outcomes in control and treatment) which indicate the similarities or differences among the subjects (villages in this case, that become part of a cluster).**
+
+**In this problem, the first method was akin to clustering based on geography. Villages next to each other (in Sr. no), had similar outcomes and ended up in the same cluster, leading to large differences among the clusters. Method 2 mixed things up and clustered villages that had "more" different outcomes. This sharply reduced the differences among the clusters**
+
+**The implication is that cluster design has to account for averages of outcomes among the subjects of the cluster or we'll get imprecise estimates for the treatment effect. The best scenario would be to bring down the variance among clusters by grouping unlike subjects (like method 2 where dissimilar villages were clustered together). This may not be possible as clustering is mostly forced (like villages, schools by geography). The next best idea could be to increase the number of clusters and then simulate all possible random assignments of clusters to obtain the sampling distribution **
 
 # 4. Sell Phones? 
 You are an employee of a newspaper and are planning an experiment to demonstrate to Apple that online advertising on your website causes people to buy iPhones. Each site visitor shown the ad campaign is exposed to $0.10 worth of advertising for iPhones. (Assume all users could see ads.) There are 1,000,000 users available to be shown ads on your newspaper’s website during the one week campaign. 
@@ -433,13 +535,72 @@ Apple indicates that they make a profit of $100 every time an iPhone sells and t
 a. By how much does the ad campaign need to increase the probability of purchase in order to be “worth it” and a positive ROI (supposing there are no long-run effects and all the effects are measured within that week)?
 
 ```{r}
+# Each site visitor shown the ad is exposed to $.10 of ads
+# There are 1,000,000 users in one week
+# Profit is $100 on every phone
+# y(0) - .5% of visitors to news site buy an iphone in a week (in absence of ads)
+
+# Users for the website in a wee
+week.users <- 1000000
+week.users
+# Profit per phone sold
+profit_per_phone <- 100
+profit_per_phone
+# % of visitors that buy without ads
+week.percent_users_buy <- .5
+week.percent_users_buy
+# Number of users that buy (irrespective of the ads)
+week.number_users_buy_gen <- (.5/100)*1000000
+week.number_users_buy_gen
+# Total profit in a week (irrespective of the ads)
+week.profit_gen <- week.number_users_buy_gen * profit_per_phone
+week.profit_gen
+# ad spend per user and per week for all users. This assumes all users are exposed to the ads
+adspend_per_user <- .10
+adspend_per_week <- adspend_per_user * week.users
+adspend_per_week
+# We should atleast make up the money spend on ads in a week. That means we have to sell +inc number of phones which is equivalent to +inc units of profit
+inc <- adspend_per_week/profit_per_phone
+inc
+# so we have to sell 1000 additional phones
+# Which is obs % points based on the original population eligible for ads and purchases
+inc_per <- (inc/week.users)*100
+inc_per
+# This is breakeven effect of the advertising. Anything more would be positive ROI
+# Also, we assumed that all users were shown the ad so 
+
+# Say we show the ads to only half the population. The ad spend would be half, but then we'll measure the effect on half the population also. The %'s would remain the same.
+
+
 
 ```
 
 b. Assume the measured effect is 0.2 percentage points. If users are split 50:50 between the treatment group (exposed to iPhone ads) and control group (exposed to unrelated advertising or nothing; something you can assume has no effect), what will be the confidence interval of your estimate on whether people purchase the phone?
 
 ```{r}
+# Measured effect is .2% points
+inc_measured <- .2
+inc_measured
 
+# users in control and treatment
+week.users.control <- week.users/2
+week.users.treatment <- week.users/2
+week.users.control
+week.users.treatment
+# p by the formula in the question
+p <- (week.users.control*week.percent_users_buy/100 + week.users.treatment*(week.percent_users_buy+inc_measured)/100)/(week.users.control + week.users.treatment)
+p
+# se by the formula in the question
+se <- sqrt(p*(1-p)*((1/week.users.control) + (1/week.users.treatment)))
+se
+
+# tail of a 95% confidence interval
+ce_tail <- se*1.96
+ce_tail
+
+# ce <- 20*ce_tail
+ce <- 20*ce_tail
+ce
 ```
 
   + **Note:** The standard error for a two-sample proportion test is $\sqrt{p(1-p)*(\frac{1}{n_{1}}+\frac{1}{n_{2}})}$ where $p=\frac{x_{1}+x_{2}}{n_{1}+n_{2}}$, where $x$ and $n$ refer to the number of “successes” (here, purchases) over the number of “trials” (here, site visits). The length of each tail of a 95% confidence interval is calculated by multiplying the standard error by 1.96.
@@ -449,6 +610,35 @@ c. Is this confidence interval precise enough that you would recommend running t
 d. Your boss at the newspaper, worried about potential loss of revenue, says he is not willing to hold back a control group any larger than 1% of users. What would be the width of the confidence interval for this experiment if only 1% of users were placed in the control group?
 
 ```{r}
+# what if only 1% of users were in control
+
+# users in control and treatment
+week.users.control <- .01*week.users
+week.users.treatment <- week.users - week.users.control
+week.users.control
+week.users.treatment
+
+# p by the formula in the question
+p <- (week.users.control*week.percent_users_buy/100 + week.users.treatment*(week.percent_users_buy+inc_measured)/100)/(week.users.control + week.users.treatment)
+p
+# se by the formula in the question
+se <- sqrt(p*(1-p)*((1/week.users.control) + (1/week.users.treatment)))
+se
+
+# tail of a 95% confidence interval
+ce_tail <- se*1.96
+ce_tail
+
+# ce <- 20*ce_tail
+ce1 <- 20*ce_tail
+ce1
+
+```
+
+```{r}
+# Comparing the 2 standard errors
+ce1/ce
+```
 
 ```
 
