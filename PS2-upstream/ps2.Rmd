@@ -595,12 +595,12 @@ se <- sqrt(p*(1-p)*((1/week.users.control) + (1/week.users.treatment)))
 se
 
 # tail of a 95% confidence interval
-ce_tail <- se*1.96
-ce_tail
+ci_tail <- se*1.96
+ci_tail
 
-# ce <- 20*ce_tail
-ce <- 20*ce_tail
-ce
+# ci <- 20*ce_tail
+ci <- 20*ci_tail
+ci
 ```
 
   + **Note:** The standard error for a two-sample proportion test is $\sqrt{p(1-p)*(\frac{1}{n_{1}}+\frac{1}{n_{2}})}$ where $p=\frac{x_{1}+x_{2}}{n_{1}+n_{2}}$, where $x$ and $n$ refer to the number of “successes” (here, purchases) over the number of “trials” (here, site visits). The length of each tail of a 95% confidence interval is calculated by multiplying the standard error by 1.96.
@@ -626,28 +626,28 @@ se <- sqrt(p*(1-p)*((1/week.users.control) + (1/week.users.treatment)))
 se
 
 # tail of a 95% confidence interval
-ce_tail <- se*1.96
-ce_tail
+ci_tail <- se*1.96
+ci_tail
 
-# ce <- 20*ce_tail
-ce1 <- 20*ce_tail
-ce1
+# ci <- 20*ci_tail
+ci1 <- 20*ci_tail
+ci1
 
 ```
 
 ```{r}
 # Comparing the 2 standard errors
-ce1/ce
+ci1/ci
 ```
+**CE width with smaller control group (1%) is about 5 times (.032) the width with equal sized control group(.00605)**
 
-```
 
 # 5. Sports Cards
 Here you will find a set of data from an auction experiment by John List and David Lucking-Reiley ([2000](https://drive.google.com/file/d/0BxwM1dZBYvxBNThsWmFsY1AyNEE/view?usp=sharing)).  
 
 ```{r}
-d2 <- read.csv("./data/listData.csv", stringsAsFactors = FALSE)
-head(d2)
+d5 <- read.csv("./data/listData.csv", stringsAsFactors = FALSE)
+head(d5)
 ```
 
 In this experiment, the experimenters invited consumers at a sports card trading show to bid against one other bidder for a pair trading cards.  We abstract from the multi-unit-auction details here, and simply state that the treatment auction format was theoretically predicted to produce lower bids than the control auction format.  We provide you a relevant subset of data from the experiment.
@@ -655,38 +655,193 @@ In this experiment, the experimenters invited consumers at a sports card trading
 a. Compute a 95% confidence interval for the difference between the treatment mean and the control mean, using analytic formulas for a two-sample t-test from your earlier statistics course. 
 
 ```{r}
+# 95% confidence interval for the difference between the treatment mean and the control mean
+
+# Grouping the data by treatment (& control)
+by.treatment <- group_by(d5, uniform_price_auction)
+# Summary
+by.treatment.summary <- summarize(by.treatment, count=n(), mean.bid=mean(bid), sd.bid=sd(bid))
+by.treatment.summary
 
 ```
 
+```{r}
+# Seems we have 2 equally sized groups (control and treatment) with very different average bid sizes but not a very sharp difference in standard deviation
+
+# Getting an idea of normality (an essential for the T test)
+
+# Extract the control and treatment separately
+bid.control <- d5[which(d5$uniform_price_auction == 0),]
+nrow(bid.control)
+head(bid.control)
+bid.treatment <- d5[which(d5$uniform_price_auction == 1),]
+nrow(bid.treatment)
+head(bid.treatment)
+
+# plots
+plot(density(bid.control$bid))
+plot(density(bid.treatment$bid))
+```
+
+**Visual test for normality (essential for the T test): The distribution of bids in control is close to normal. Bids in treatment have a bias.**
+
+```{r}
+# T test using the analytic formula
+
+# Mean of the 2 samples (control and test)
+bid.control.mean <- mean(bid.control$bid)
+bid.control.mean
+bid.treatment.mean <- mean(bid.treatment$bid)
+bid.treatment.mean
+
+# Difference of the means
+stat.mean.diff <- bid.treatment.mean - bid.control.mean
+stat.mean.diff
+
+# degrees of freedom
+stat.df <- nrow(bid.control) + nrow(bid.treatment) -2
+stat.df
+
+# sample variances
+stat.treatment.variance <- sum((bid.control$bid - bid.control.mean)^2)/nrow(bid.control)
+stat.treatment.variance
+stat.control.variance <- sum((bid.treatment$bid - bid.treatment.mean)^2)/nrow(bid.treatment)
+stat.control.variance
+
+# Pooled standard deviation
+sdpool <- sqrt(((nrow(bid.control)-1)*stat.control.variance + (nrow(bid.treatment)-1)*stat.treatment.variance)/stat.df)
+sdpool
+
+# Boundaries of the confidence interval
+ci1 <- stat.mean.diff + 1.96 * sdpool * (sqrt(1/nrow(bid.control) + 1/nrow(bid.treatment)))
+ci1
+ci2 <- stat.mean.diff - 1.96 * sdpool * (sqrt(1/nrow(bid.control) + 1/nrow(bid.treatment)))
+ci2
+
+
+ssq <- (sum((bid.control$bid - bid.control.mean)^2)+ sum((bid.treatment$bid - bid.treatment.mean)^2))/(nrow(bid.control) + nrow(bid.treatment) -2)
+ssq
+
+# t statistic
+stat.t <- (bid.treatment.mean - bid.control.mean)/sqrt((ssq/nrow(bid.treatment)) + (ssq/nrow(bid.control)))
+stat.t
+
+# Verified with the R calculations below
+```
+**The 95% confidence interval from the calculations is: [-20.56033, -3.851439]**
+
+```{r}
+# T test using R to verify the calculations
+res <- t.test(bid.treatment$bid, bid.control$bid, var.equal = TRUE)
+res
+```
+**p value is .0063, which is less than the significance level alpha = .05**
+**95% confidence interval is [-20.844162, -3.567603]**
+
 b. In plain language, what does this confidence interval mean?
+**The confidence interval [-20.844162, -3.567603] means that if we do a large number of measurements, there's a 95% chance that the difference in means would be in the range [-20.844162, -3.567603]**
+**This makes us reject the NULL hypothesis that the means are the same**
 
 c. Regression on a binary treatment variable turns out to give one the same answer as the standard analytic formula you just used.  Demonstrate this by regressing the bid on a binary variable equal to 0 for the control auction and 1 for the treatment auction.
 
 ```{r}
+# Regression
+reg <- lm(bid ~ uniform_price_auction,
+                 data=d5)
+summary(reg)
 
 ```
+**We get exactly the same results**
+**p value ( 0.006315 )**
+**The equation is bid = 28.824 -12.206(uniform_price_auction)**
 
 d. Calculate the 95% confidence interval you get from the regression.
 
 ```{r}
-
+# The 95% confidence interval is the slope (coeff for "uniform_price_auction") +- 2 standard errors
+# Could also be calculated using confint
+confint(reg, 'uniform_price_auction', level=.95)
 ```
+**The 95% confidence interval for the coeff of "uniform_price_auction" is the coeff +- 2 standard errors(.4327 from the summary)**
+**We get the same interval as the T test**
+**                          2.5 %    97.5 % **
+**-uniform_price_auction -20.84416 -3.567603**
+
 
 e. On to p-values. What p-value does the regression report? Note: please use two-tailed tests for the entire problem.
 
 ```{r}
+# Coefficients and p values from the regression
+summary(reg)
 
 ```
+**The regression reports a p value (for 2 sided hypotheses): 0.006315**
 
-f. Now compute the same p-value using randomization inference.
+f. Now compute the same p-value using randomization inference
 
 ```{r}
+# Some analysis of the data
+bids.group <- group_by(d5, uniform_price_auction)
+head(bids.group)
+bids.summary <- summarize(bids.group, count=n())
+bids.summary
+```
+
+```{r}
+# p value using the randomization inference
+
+
+# ATE observed
+# Using the ATE formula from a
+bids.ate <- est.ate(d5$bid, d5$uniform_price_auction)
+bids.ate
+
+# Randomizing the bids (among control and treatment). 
+# uniform_price_auction is binary so we can just assume 0, 1 as control and treatment
+# We'll keep the ratio control:treatment the same as observed (34:34)
+bids.random <- randomize(d5)
+
+# For curiosity figuring out the est ATE of one of the randomization done above
+# Using the modified ATE formula done for Q a
+bids.rate <- est.mate(bids.random$data$bid, bids.random$treatment)
+bids.rate
+
+# So we get quite a different value from the actual
 
 ```
+```{r}
+# Repeating the experiment 10k times and getting the distribution under sharp null
+# We are most interested in the differences in mean statistic
+dom.distribution.under.sharp.null <- replicate(5000, est.mate(bids.random$data$bid, (randomize(d5))$treatment))
+
+
+# Average estimate for the ATE
+mean(dom.distribution.under.sharp.null)
+# Again, very different from ATE
+
+```
+
+```{r}
+# visualizing the distribution
+plot(density(dom.distribution.under.sharp.null), main = "difference of means distribution under sharp NULL")
+hist(dom.distribution.under.sharp.null, main = "differences of means distribution under sharp NULL")
+```
+```{r}
+# 2 tailed p-value
+p2 <- mean(abs(dom.distribution.under.sharp.null) >= bids.ate )
+p2
+
+# p-value
+p1 <- mean(dom.distribution.under.sharp.null >= bids.ate )
+p1
+```
+
 
 g. Compute the same p-value again using analytic formulas for a two-sample t-test from your earlier statistics course. (Also see part (a).)
 
 ```{r}
+# p value using the analytic formulas
+
 
 ```
 
