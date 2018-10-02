@@ -51,7 +51,7 @@ head(d)
 success <- group_by(d, success)
 summarize(success, count=n(), viewSum=sum(views), viewMean=mean(views))
 ```
-The **mean of views among lottery winners and losers is 2.34 and 1.86 respcetively**. The **views for others generally look more positive among the lottery winners**
+**Answer: The mean of views among lottery winners and losers is 2.34 and 1.86 respcetively**. The **views for others generally look more positive among the lottery winners**
 
 ```{r}
 # Estimate ATE function
@@ -63,6 +63,7 @@ est.ate <- function(result, treat) {
 ate <- est.ate(success$views, success$success) 
 ate
 ```
+** Answer: A positive ATE 0.4748337 adds more weight to above statement**
 
 b. But is this a meaningful difference, or could it just be randomization noise? Conduct 10,000 simulated random assignments under the sharp null hypothesis to find out. (Don't just copy the code from the async, think about how to write this yourself.) 
 
@@ -83,7 +84,7 @@ summarize(success1, count=n(), viewSum=sum(views), viewMean=mean(views))
 # randomize() from the expriments library, returns the "randomize" class
 # randomize() creates 2 groups treatment and control which is sufficient for us in this case
 # It is equivalent to us randomizing among 0 and 1 for "success" variable
-# We are not doing any blocking, so subjects in a group can be variable
+# We are not doing any blocking, so subjects in a group can be variable. We are choosing to keep them as close to equal
 successr <- randomize(success1)
 ```
 
@@ -130,6 +131,7 @@ hist(distribution.under.sharp.null,
      main = "Histogram under Sharp Null")
 ```
 
+
 ```{r}
 # More analysis on the distribution. Plotting the p value
 par(mfrow = c(1,2))
@@ -141,14 +143,19 @@ hist(distribution.under.sharp.null,
      freq = FALSE)
 abline(v = ate, col = "blue")
 ```
+**Answer: Randomization done above. Graphs show the normal distribution of ATE estimates**
 
 c. How many of the simulated random assignments generate an estimated ATE that is at least as large as the actual estimate of the ATE? 
 
 ```{r}
+# ate was
+ate
+
 # num of assignments that generate an estimated ATE at least as large as the actual
 n <- sum(distribution.under.sharp.null >= ate)
 n
 ```
+**Answer: 25 assignments generate an estimated ATE at least as large as the actual**
 
 d. What is the implied *one-tailed* p-value? 
 
@@ -158,15 +165,17 @@ m <- mean(distribution.under.sharp.null >= ate )
 m
 
 ```
+**Answer: One tailed p-value is .0025**
 
 e. How many of the simulated random assignments generate an estimated ATE that is at least as large *in absolute value* as the actual estimate of the ATE? 
 
 ```{r}
 # num of simulated random assignments with an estimated ATE that is at least as large *in absolute value* as the actual estimate of the ATE
-na <- sum(abs(distribution.under.sharp.null) >= ate)
+na <- sum(abs(distribution.under.sharp.null) >= abs(ate))
 na
 
 ```
+**Answer: 42 simulated random assignments generate an estimated ATE that is at least as large "in absolute value" as the actual estimate of the ATE**
 
 f. What is the implied two-tailed p-value? 
 
@@ -175,6 +184,10 @@ f. What is the implied two-tailed p-value?
 ma <- mean(abs(distribution.under.sharp.null) >= ate )
 ma
 ```
+**Answer: The 2 tailed p-value is .0042**
+** The p value is less than .05. We should be able to reject the SHARP NULL hypothesis of No treatment effect**
+
+**_____________________________________________**
 
 # 2. Term Limits Aren't Good. 
 
@@ -201,10 +214,13 @@ head(state)
 # Mean number of bills introduced in each state
 summarize(state, count=n(), meanBills=mean(bills_introduced))
 
-# Which state looks more productive
+# Which state looks more productive? 
 
 ```
-**Texas has a mean of 68.77 compared to 25.51 for Arkansas. Texas seems to be more productive in bills**
+**Answer: Texas has a mean of 68.77 compared to 25.51 for Arkansas. Texas's legislative sessions seem to produce more bills in average/session**
+**There is significant difference (significant as in value on average) among the legislative performance that one has to wonder about state/location being causal. A Question would be that if a Senator starts producing more bill when she moves from Arkansas to Texas?**
+The answer to this Q (and to the related question of if state is Causal) **cannot come from just observing this data**
+**i.e. there's nothing in the data or expriment that says that chaning states for a senator would make more bills, so cannot say if state is causal**
 
 ```{r}
 # Grouping by terms
@@ -214,10 +230,16 @@ head(terms)
 # Mean number of bills by terms
 summarize(terms, meanBills=mean(bills_introduced))
 
-# Which term is more effective
+# Which term is more effective? 
 
 ```
-** 
+**Answer: 4 year terms seem to produce more bills (53.09) per legislative session on an average, when compared to average number of bills for a 2 year term (38.57)**
+**Again, a significant difference in performance among the 2 groups. Motivates us to look at cuasality**
+**We can change the term limits and observe performance. In a way, that's what the experiment does within each state. Terms could be causal**
+
+Which of this effect is causal? 
+**TODO**
+
 ```{r}
 # Grouping by state and term term
 stateTerms <- group_by(d2, texas0_arkansas1, term2year)
@@ -227,19 +249,36 @@ head(stateTerms)
 summarize(stateTerms, meanBills=mean(bills_introduced))
 
 # Which groupings indicate more effectiveness? 
-# TODO
+
 
 ```
+**Answer: 2 year terms on an average produce less bills(in a session) in Texas**
+**Same is the case in Arkansas**
+**So within a state, different terms show different legislative output**
 
+**This should motivate us to look at the lenght of term (term2year) as causal**
 
 b. For each state, estimate the standard error of the estimated ATE. 
 
 ```{r}
 # Separating out the states
+
+# Texas
 texas <- state[which(state$texas0_arkansas1==0),]
 head(texas)
+
+# Finding out the control/treatment ratio
+texas.group <- group_by(texas, term2year)
+summarize(texas.group, count=n())
+
+# Arkansas
 arkansas <- state[which(state$texas0_arkansas1==1),]
 head(arkansas)
+
+# Control/Treatment ratio
+arkansas.group <- group_by(arkansas, term2year)
+summarize(arkansas.group, count=n())
+
 ```
 
 ```{r}
@@ -250,6 +289,13 @@ texas_ate
 # Considering the distribution with other random assignments
 # We'll randomize the term variable. "2 years" is our treatment
 # Since the grouping is binary, randomization of the entire dataset should work
+# Also the groups are almost of the same size. We can work with that assumption
+
+# Ratio of treatment and control
+rio.texas <- c(sum(texas$term2year), nrow(texas) - sum(texas$term2year))
+rio.texas
+
+# We'll create random sets in the same ratio
 texas_r <- randomize(texas)
 
 
@@ -261,11 +307,13 @@ texas_r <- randomize(texas)
 distribution.under.sharp.null.texas <- replicate(10000, est.mate(texas_r$data$bills_introduced, (randomize(texas))$treatment))
 ```
 ```{r}
+# Visualizing the distribution of ATE estimates
 plot(density(distribution.under.sharp.null.texas), 
      main = "Density under Sharp Null for Texas")
 
 ```
 ```{r}
+# Histogram of the ATE estimates
 hist(distribution.under.sharp.null.texas, 
      main = "Histogram under Sharp Null for Texas")
 ```
@@ -273,17 +321,17 @@ hist(distribution.under.sharp.null.texas,
 
 ```{r}
 # average estimated ate for texas
-mean(distribution.under.sharp.null.texas)
+# Debug: mean(distribution.under.sharp.null.texas)
 
 # Standard error is the square root of the averaged squared deviation (from the average EST estimate)
-head(distribution.under.sharp.null.texas)
+# Debug head(distribution.under.sharp.null.texas)
 se_texas <- sqrt(mean((distribution.under.sharp.null.texas-mean(distribution.under.sharp.null.texas))^2))
 se_texas
 
 
 
 ```
-
+**Answer: The standard error for ATE estimates in Texas is 9.867**
 ```{r}
 # ATE for arkansas
 arkansas_ate <- est.ate(arkansas$bills_introduced, arkansas$term2year)
@@ -312,23 +360,30 @@ hist(distribution.under.sharp.null.arkansas,
 
 ```{r}
 # average estimated ate for arkansas
-mean(distribution.under.sharp.null.arkansas)
+# mean(distribution.under.sharp.null.arkansas)
 
 # Standard error is the square root of the averaged squared deviation (from the average EST estimate)
-head(distribution.under.sharp.null.arkansas)
+# head(distribution.under.sharp.null.arkansas)
 se_arkansas <- sqrt(mean((distribution.under.sharp.null.arkansas-mean(distribution.under.sharp.null.arkansas))^2))
 se_arkansas
 ```
+**Answer: The standard error for ATE estimate for arkansas is 3.77561**
 
 c. Use equation (3.10) to estimate the overall ATE for both states combined. 
 
 ```{r}
 # ATE for both sides combined
-# Recalling the original and then using 3.10
+# Recalling previous values and then using 3.10
+
+# ATE for texas from the experiment
 texas_ate
+# ATE for arkansas from the experiment
 arkansas_ate
+# Number of observations in texas
 nrow(texas)
+# Number of observations in Arkansas
 nrow(arkansas)
+# Total number of observations
 nrow(d2)
 
 # Combined ATE
@@ -337,19 +392,34 @@ comb_ate
 
 
 ```
+**Answer: The overall ATE is -13.2168**
 
 d. Explain why, in this study, simply pooling the data for the two states and comparing the average number of bills introduced by two-year senators to the average number of bills introduced by four-year senators leads to biased estimate of the overall ATE. 
+```{r}
+# What if we pooled data for both states to calculate the ATE (Instead of the method above)?
+# Value of ATE from the experiment with pooled data
+pooled.ate <- est.ate(d2$bills_introduced, d2$term2year)
+pooled.ate
+```
+**Its quite similar to the value we get from the calculation of the overall ATE**
+**Answer: The pooled data
 
 e. Insert the estimated standard errors into equation (3.12) to estimate the stand error for the overall ATE. 
 
 ```{r}
 # Recalling previous values and then putting them in 3.12 for combined SE
+
+# Standard ATE error for Texas
 se_texas
+# Standard ATE error for Arkansas
 se_arkansas
+
+# Standar error for the 2 combined
 se_comb <- sqrt((nrow(texas)*se_texas/nrow(d2))^2 + (nrow(arkansas)*se_arkansas/nrow(d2))^2)
 se_comb
 
 ```
+**Answer: Standard Error for the overall ATE is 5.050909**
 
 f. Use randomization inference to test the sharp null hypothesis that the treatment effect is zero for senators in both states. 
 
@@ -360,13 +430,13 @@ f. Use randomization inference to test the sharp null hypothesis that the treatm
 head(distribution.under.sharp.null.texas)
 # We also have the ate from the actual expriment
 texas_ate
-# One tailed p value
-p_one_texas <- mean(distribution.under.sharp.null.texas >= texas_ate )
-p_one_texas
+
 # Two tailed p value
-p_two_texas <- mean(abs(distribution.under.sharp.null.texas) >= texas_ate)
+p_two_texas <- mean(abs(distribution.under.sharp.null.texas) >= abs(texas_ate))
 p_two_texas
 ``` 
+**Answer: p value for ATE for Texas is 0.0893**
+**p value is close but not less than .05. We cannot reject the SHARP NULL hypothesis**
 ```{r}
 # Randomization inference to test the sharp null hypothesis (treatment effect is 0 in Arkansas)
 
@@ -374,15 +444,16 @@ p_two_texas
 head(distribution.under.sharp.null.arkansas)
 # We also have the ate from the actual expriment
 arkansas_ate
-# One tailed p value
-p_one_arkansas <- mean(distribution.under.sharp.null.arkansas >= arkansas_ate )
-p_one_arkansas
+
 # Two tailed p value
-p_two_arkansas <- mean(abs(distribution.under.sharp.null.texas) >= arkansas_ate)
+p_two_arkansas <- mean(abs(distribution.under.sharp.null.texas) >= abs(arkansas_ate))
 p_two_arkansas
 ```
+**Answer: p value for ATE for Arkansas is 0.3162**
+**p value is not less than .05. We cannot reject the SHARP NULL hypothesis**
 
 g. **IN Addition:** Plot histograms for both the treatment and control groups in each state (for 4 histograms in total).
+**Answer: Tough to compare with 2 different histograms. Trying to overlap**
 ```{r}
 # Histogram for control and Treatment in Texas
 hist(texas[which(state$term2year == 0),]$bills_introduced, xlim = c(0,140), ylim = c(0,6), col = "blue", border = F, main = "Distribution of bills_introduced under control and treatment in Texas", xlab = "Number of bills introduced in a session", density=10, angle = 135)
@@ -703,24 +774,32 @@ stat.df <- nrow(bid.control) + nrow(bid.treatment) -2
 stat.df
 
 # sample variances
-stat.treatment.variance <- sum((bid.control$bid - bid.control.mean)^2)/nrow(bid.control)
-stat.treatment.variance
-stat.control.variance <- sum((bid.treatment$bid - bid.treatment.mean)^2)/nrow(bid.treatment)
+stat.control.variance <- sum((bid.control$bid - bid.control.mean)^2)/nrow(bid.control)
 stat.control.variance
+stat.treatment.variance <- sum((bid.treatment$bid - bid.treatment.mean)^2)/nrow(bid.treatment)
+stat.treatment.variance
 
 # Pooled standard deviation
-sdpool <- sqrt(((nrow(bid.control)-1)*stat.control.variance + (nrow(bid.treatment)-1)*stat.treatment.variance)/stat.df)
-sdpool
+sdpool.small <- sqrt(((nrow(bid.control)-1)*stat.control.variance + (nrow(bid.treatment)-1)*stat.treatment.variance)/stat.df)
+sdpool.small
 
-# Boundaries of the confidence interval
-ci1 <- stat.mean.diff + 1.96 * sdpool * (sqrt(1/nrow(bid.control) + 1/nrow(bid.treatment)))
-ci1
-ci2 <- stat.mean.diff - 1.96 * sdpool * (sqrt(1/nrow(bid.control) + 1/nrow(bid.treatment)))
-ci2
+# Pooled standard deviation with formula used for sample sizes > 30
+sdpool.large <-sqrt((stat.control.variance/nrow(bid.control)) + (stat.treatment.variance/nrow(bid.treatment)))
+sdpool.large
 
-
+# SSQ
 ssq <- (sum((bid.control$bid - bid.control.mean)^2)+ sum((bid.treatment$bid - bid.treatment.mean)^2))/(nrow(bid.control) + nrow(bid.treatment) -2)
 ssq
+sd <- sqrt(ssq)
+sd
+
+# We'll use the small sample 34 is very close to the "30"
+# Boundaries of the confidence interval
+# Taking the t value (t.75) from the tables
+ci1 <- stat.mean.diff + 2.00 * sdpool.small * (sqrt(1/nrow(bid.control) + 1/nrow(bid.treatment)))
+ci1
+ci2 <- stat.mean.diff - 2.00 * sdpool.small * (sqrt(1/nrow(bid.control) + 1/nrow(bid.treatment)))
+ci2
 
 # t statistic
 stat.t <- (bid.treatment.mean - bid.control.mean)/sqrt((ssq/nrow(bid.treatment)) + (ssq/nrow(bid.control)))
@@ -728,7 +807,7 @@ stat.t
 
 # Verified with the R calculations below
 ```
-**The 95% confidence interval from the calculations is: [-20.56033, -3.851439]**
+**The 95% confidence interval from the calculations is: [-20.73082, -3.68094]**
 
 ```{r}
 # T test using R to verify the calculations
@@ -790,7 +869,6 @@ bids.summary
 ```{r}
 # p value using the randomization inference
 
-
 # ATE observed
 # Using the ATE formula from a
 bids.ate <- est.ate(d5$bid, d5$uniform_price_auction)
@@ -801,16 +879,20 @@ bids.ate
 # We'll keep the ratio control:treatment the same as observed (34:34)
 bids.random <- randomize(d5)
 
-# For curiosity figuring out the est ATE of one of the randomization done above
+# DEBUG: For curiosity figuring out the est ATE of 2 of the randomization done above
 # Using the modified ATE formula done for Q a
 bids.rate <- est.mate(bids.random$data$bid, bids.random$treatment)
 bids.rate
 
-# So we get quite a different value from the actual
+bids.random <- randomize(d5)
+bids.rate <- est.mate(bids.random$data$bid, bids.random$treatment)
+bids.rate
+
+# So we get quite a different value from the actual and  quite different values each time
 
 ```
 ```{r}
-# Repeating the experiment 10k times and getting the distribution under sharp null
+# Repeating the experiment 5k times and getting the distribution under sharp null
 # We are most interested in the differences in mean statistic
 dom.distribution.under.sharp.null <- replicate(5000, est.mate(bids.random$data$bid, (randomize(d5))$treatment))
 
@@ -827,22 +909,54 @@ plot(density(dom.distribution.under.sharp.null), main = "difference of means dis
 hist(dom.distribution.under.sharp.null, main = "differences of means distribution under sharp NULL")
 ```
 ```{r}
-# 2 tailed p-value
-p2 <- mean(abs(dom.distribution.under.sharp.null) >= bids.ate )
-p2
-
-# p-value
-p1 <- mean(dom.distribution.under.sharp.null >= bids.ate )
-p1
+# More analysis on the distribution. Plotting the p value
+par(mfrow = c(1,2))
+plot(density(dom.distribution.under.sharp.null), 
+     main = "Density Plot of ATE")
+abline(v = bids.ate, col = "blue")
+hist(dom.distribution.under.sharp.null, 
+     main = "Histogram of ATE", 
+     freq = FALSE)
+abline(v = bids.ate, col = "blue")
 ```
 
+
+
+```{r}
+bids.ate 
+# observations with absolute value >= ate
+sum(abs(dom.distribution.under.sharp.null) >= abs(bids.ate))
+# 2 tailed p-value
+p2 <- mean(abs(dom.distribution.under.sharp.null) >= abs(bids.ate))
+p2
+
+# observations with value >= ate
+sum(dom.distribution.under.sharp.null >= abs(bids.ate))
+# single tail p value
+p1 <- mean(dom.distribution.under.sharp.null >= abs(bids.ate))
+p1
+```
+**The 2 sided p value from randomization inference is .0062**
 
 g. Compute the same p-value again using analytic formulas for a two-sample t-test from your earlier statistics course. (Also see part (a).)
 
 ```{r}
 # p value using the analytic formulas
+# p value is the area of the t distribution > t statistic (calculated above)
+# We double it to get to the 2 sided value
+# We'll look up a table to confirm
+
+# Value from the table corresponding to t statistic of -2.8211 and degrees of freedom = 66
+table.p1 <- .003159
+table.p2 <- table.p1 * 2
+table.p2
 
 
 ```
+**The p value from the t test is 0.006318**
 
 h. Compare the two p-values in parts (e) and (f). Are they much different? Why or why not? How might your answer to this question change if the sample size were different?
+
+**p value from (e)(Regression): 0.006315**
+**p value from (f)(Randomization inference): 1**
+
