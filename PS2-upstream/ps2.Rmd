@@ -219,8 +219,7 @@ summarize(state, count=n(), meanBills=mean(bills_introduced))
 ```
 **Answer: Texas has a mean of 68.77 compared to 25.51 for Arkansas. Texas's legislative sessions seem to produce more bills in average/session**
 **There is significant difference (significant as in value on average) among the legislative performance that one has to wonder about state/location being causal. A Question would be that if a Senator starts producing more bill when she moves from Arkansas to Texas?**
-The answer to this Q (and to the related question of if state is Causal) **cannot come from just observing this data**
-**i.e. there's nothing in the data or expriment that says that chaning states for a senator would make more bills, so cannot say if state is causal**
+** The answer to this Q (and building a counterfactual argumet) does not seem very viable or even interesting, so we'll not investigate state as causal**
 
 ```{r}
 # Grouping by terms
@@ -235,10 +234,10 @@ summarize(terms, meanBills=mean(bills_introduced))
 ```
 **Answer: 4 year terms seem to produce more bills (53.09) per legislative session on an average, when compared to average number of bills for a 2 year term (38.57)**
 **Again, a significant difference in performance among the 2 groups. Motivates us to look at cuasality**
-**We can change the term limits and observe performance. In a way, that's what the experiment does within each state. Terms could be causal**
+**We can change the term limits and observe performance. In a way, that's what the experiment does within each state. Terms definately could be causal and we should be able to measure the effect with experiments**
 
 Which of this effect is causal? 
-**TODO**
+**Answer: It looks more intersting to investigate "Term2year" as Causal**
 
 ```{r}
 # Grouping by state and term term
@@ -395,6 +394,15 @@ comb_ate
 **Answer: The overall ATE is -13.2168**
 
 d. Explain why, in this study, simply pooling the data for the two states and comparing the average number of bills introduced by two-year senators to the average number of bills introduced by four-year senators leads to biased estimate of the overall ATE. 
+
+```{r}
+# The summary below reveals a lof of why pooling this data would produce a biased estimate of ATE. We see that in actual calculations later
+
+# Mean number of bills by grouping
+summarize(stateTerms, meanBills=mean(bills_introduced))
+
+```
+
 ```{r}
 # What if we pooled data for both states to calculate the ATE (Instead of the method above)?
 # Value of ATE from the experiment with pooled data
@@ -402,7 +410,7 @@ pooled.ate <- est.ate(d2$bills_introduced, d2$term2year)
 pooled.ate
 ```
 **Its quite similar to the value we get from the calculation of the overall ATE**
-**Answer: The pooled data
+**Answer: The pooled data produces a biased estimate of ATE due to the different baselines among the 2 states. Texas average is 76.8 for control, while Arkansas is at 30.70, which is less than half the baseline for Texas.**
 
 e. Insert the estimated standard errors into equation (3.12) to estimate the stand error for the overall ATE. 
 
@@ -446,11 +454,11 @@ head(distribution.under.sharp.null.arkansas)
 arkansas_ate
 
 # Two tailed p value
-p_two_arkansas <- mean(abs(distribution.under.sharp.null.texas) >= abs(arkansas_ate))
+p_two_arkansas <- mean(abs(distribution.under.sharp.null.arkansas) >= abs(arkansas_ate))
 p_two_arkansas
 ```
-**Answer: p value for ATE for Arkansas is 0.3162**
-**p value is not less than .05. We cannot reject the SHARP NULL hypothesis**
+**Answer: p value for ATE for Arkansas is 0.0049**
+**p value is less than .05. We can reject the SHARP NULL hypothesis**
 
 g. **IN Addition:** Plot histograms for both the treatment and control groups in each state (for 4 histograms in total).
 **Answer: Tough to compare with 2 different histograms. Trying to overlap**
@@ -473,6 +481,8 @@ legend('topright',c('Control','Treatment'),
        border = NA)
 ```
 
+**____________________________________________**
+
 # 3. Cluster Randomization
 Use the data in *Field Experiments* Table 3.3 to simulate cluster randomized assignment. (*Notes: (a) Assume 3 clusters in treatment and 4 in control; and (b) When Gerber and Green say ``simulate'', they do not mean ``run simulations with R code'', but rather, in a casual sense ``take a look at what happens if you do this this way.'' There is no randomization inference necessary to complete this problem.*)
 
@@ -485,9 +495,9 @@ d3 <- read.csv("./data/ggChapter3.csv", stringsAsFactors = FALSE)
 a. Suppose the clusters are formed by grouping observations {1,2}, {3,4}, {5,6}, ... , {13,14}. Use equation (3.22) to calculate the standard error assuming half of the clusters are randomly assigned to treatment. 
 
 ```{r} 
-# Add the cluster ID to data
+# Add a cluster ID to data
 d3$cluster <- NA
-# Assign the clusters for "a"
+# Assign the clusters as stated in "a"
 d3$cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7)
 head(d3)
 ```
@@ -498,11 +508,12 @@ all_clusters <- unique(d3$cluster)
 all_clusters
 # Number of clusters in treatment
 clusters.in.treatment <- 3
-# Randomize based on unique cluster ID's
+# Generic function to randomly(pseudo) pick the cluster ID's
 randomize.clusters <- function(d) {
   treat.clusters <- sample(x = all_clusters, 
                                 size = clusters.in.treatment, 
                                 replace = FALSE)
+  # returns 1 if a cluster ID in those that are picked
   return(as.numeric(d$cluster %in% treat.clusters))
 }
 
@@ -511,6 +522,7 @@ d3$treatment <- randomize.clusters(d3)
 
 # QUESTION & TODO More randomizations to get an estimate. For now just treating it as one expriment
 
+# Grouping data by clusters and adding the treatment column(treatment-1, control-0 for the cluster)
 clusters <- group_by(d3, cluster)
 clusters.summary <- summarize(clusters, count=n(), mean_y=mean(Y), mean_d=mean(D), treatment=sum(treatment)/2 )
 clusters.summary
@@ -543,11 +555,11 @@ N <- nrow(d3)
 N
 nrow(clusters.summary)
 
-se <- sqrt(((m*variance_y/N-m) + ((N-m)*variance_d/m) + 2*covariance)/nrow(clusters.summary))
+se <- sqrt(((m*variance_y/N-m) + ((N-m)*variance_d/m) + 2*covariance)/(nrow(clusters.summary) - 1))
 se
 
 ```
-**The standard error for one randomization (3 groups in treatment) is 3.885473**
+**Answer: The standard error for one randomization (3 groups in treatment) is 4.196791 **
 
 b. Suppose that clusters are instead formed by grouping observations {1,14}, {2,13}, {3,12}, ... , {7,8}. Use equation (3.22) to calculate the standard error assuming half of the clusters are randomly assigned to treatment. 
 
@@ -574,7 +586,7 @@ variance_d <- (sum((clusters.summary$mean_d - mean(clusters.summary$mean_d))^2))
 variance_d
 
 # Covariance among y(0) and Y(1)
-covariance <- sum((clusters.summary$mean_y - mean(clusters.summary$mean_y))*(clusters.summary$mean_d - mean(clusters.summary$mean_d)))/nrow(clusters.summary)
+covariance <- sum((clusters.summary$mean_y - mean(clusters.summary$mean_y))*(clusters.summary$mean_d - mean(clusters.summary$mean_d)))/nrow(clusters.summary - 1)
 covariance
 
 # applying 3.22
@@ -586,17 +598,21 @@ N <- nrow(d4)
 N
 nrow(clusters.summary)
 
-se <- sqrt(((m*variance_y/N-m) + ((N-m)*variance_d/m) + 2*covariance)/nrow(clusters.summary))
-se
+se1 <- sqrt(((m*variance_y/N-m) + ((N-m)*variance_d/m) + 2*covariance)/(nrow(clusters.summary) - 1))
+se1
 ``` 
+**Answer: The standard error for one randomization (3 groups in treatment) is 0.5814735**
 
 c. Why do the two methods of forming clusters lead to different standard errors? What are the implications for the design of cluster randomized experiments? 
 
-**The methods lead to different standard errors due to differences in the cluster means (for outcomes in control and treatment) which indicate the similarities or differences among the subjects (villages in this case, that become part of a cluster).**
-
+**Answer: The methods lead to different standard errors due to differences in the cluster means (for outcomes in control and treatment) which indicate the similarities or differences among the subjects (villages in this case, that become part of a cluster).**
 **In this problem, the first method was akin to clustering based on geography. Villages next to each other (in Sr. no), had similar outcomes and ended up in the same cluster, leading to large differences among the clusters. Method 2 mixed things up and clustered villages that had "more" different outcomes. This sharply reduced the differences among the clusters**
 
-**The implication is that cluster design has to account for averages of outcomes among the subjects of the cluster or we'll get imprecise estimates for the treatment effect. The best scenario would be to bring down the variance among clusters by grouping unlike subjects (like method 2 where dissimilar villages were clustered together). This may not be possible as clustering is mostly forced (like villages, schools by geography). The next best idea could be to increase the number of clusters and then simulate all possible random assignments of clusters to obtain the sampling distribution **
+**Answer: The implication is that cluster design has to account for averages of outcomes among the subjects, or we'll get imprecise estimates for the treatment effect.**
+The **best scenario would be to bring down the variance among clusters by grouping unlike subjects** (like method 2 where dissimilar villages were clustered together). This may not be possible as clustering is mostly forced (like villages, schools by geography).
+**The next best idea could be to increase the number of clusters and then simulate all possible random assignments of clusters** to obtain the sampling distribution **
+
+**_______________________________________** 
 
 # 4. Sell Phones? 
 You are an employee of a newspaper and are planning an experiment to demonstrate to Apple that online advertising on your website causes people to buy iPhones. Each site visitor shown the ad campaign is exposed to $0.10 worth of advertising for iPhones. (Assume all users could see ads.) There are 1,000,000 users available to be shown ads on your newspaper’s website during the one week campaign. 
@@ -617,7 +633,7 @@ week.users
 # Profit per phone sold
 profit_per_phone <- 100
 profit_per_phone
-# % of visitors that buy without ads
+# % of visitors that buy without ads. This can be considered "control"
 week.percent_users_buy <- .5
 week.percent_users_buy
 # Number of users that buy (irrespective of the ads)
@@ -645,6 +661,8 @@ inc_per
 
 
 ```
+**Answer: The ads would have to convert an additional .1% website user to buyers**
+**This'll sell 1000 additional phones, which creates 1e5 of incremental profits, which covers the (1e-1)(1e6) cost of advertising**
 
 b. Assume the measured effect is 0.2 percentage points. If users are split 50:50 between the treatment group (exposed to iPhone ads) and control group (exposed to unrelated advertising or nothing; something you can assume has no effect), what will be the confidence interval of your estimate on whether people purchase the phone?
 
@@ -658,9 +676,11 @@ week.users.control <- week.users/2
 week.users.treatment <- week.users/2
 week.users.control
 week.users.treatment
+
 # p by the formula in the question
 p <- (week.users.control*week.percent_users_buy/100 + week.users.treatment*(week.percent_users_buy+inc_measured)/100)/(week.users.control + week.users.treatment)
 p
+
 # se by the formula in the question
 se <- sqrt(p*(1-p)*((1/week.users.control) + (1/week.users.treatment)))
 se
@@ -669,14 +689,26 @@ se
 ci_tail <- se*1.96
 ci_tail
 
-# ci <- 20*ce_tail
-ci <- 20*ci_tail
-ci
+# Upper and Lower limits of the confidence interval
+ci1 <- .002 + ci_tail
+ci1
+ci2 <- .002 - ci_tail
+ci2
+
+# Width of the confidence interval
+ci.wid1 <- ci1 - ci2
+ci.wid1
+
+# % size of the CI
+(ci.wid1/(inc_measured/100))*100
 ```
+**Answer: The 95% confidence interval would be [0.00169727, 0.00230273]**
 
   + **Note:** The standard error for a two-sample proportion test is $\sqrt{p(1-p)*(\frac{1}{n_{1}}+\frac{1}{n_{2}})}$ where $p=\frac{x_{1}+x_{2}}{n_{1}+n_{2}}$, where $x$ and $n$ refer to the number of “successes” (here, purchases) over the number of “trials” (here, site visits). The length of each tail of a 95% confidence interval is calculated by multiplying the standard error by 1.96.
   
 c. Is this confidence interval precise enough that you would recommend running this experiment? Why or why not?
+**Answer: The 95% confidence level calculated above meets our needs. Since profitability is a concern, its reassuing that the lower bound is above the customer conversion rate(visitor buying phones on seeing the AD) for positive ROI (Our campaign has positive ROI above .1% ad conversion rate)**
+**Its also reassuring that the interval is narrow but includes both the "minimum requirment for ROI" (.1%) and the observed value of the expriment(.2%)**
 
 d. Your boss at the newspaper, worried about potential loss of revenue, says he is not willing to hold back a control group any larger than 1% of users. What would be the width of the confidence interval for this experiment if only 1% of users were placed in the control group?
 
@@ -700,17 +732,20 @@ se
 ci_tail <- se*1.96
 ci_tail
 
-# ci <- 20*ci_tail
-ci1 <- 20*ci_tail
+# Upper and Lower limits of the confidence interval
+ci1 <- .002 + ci_tail
 ci1
+ci2 <- .002 - ci_tail
+ci2
+
+# Width of the confidence interval
+ci.wid2 <- ci1 - ci2
+ci.wid2
 
 ```
+**Answer: The 95% confidence interval with 1% in control is would be [0.000359995, 0.003640005]**
+**Width of the confidence interval is 0.00328001  which is ~5 times the width of the confidence interval with 50% of the sample in control**
 
-```{r}
-# Comparing the 2 standard errors
-ci1/ci
-```
-**CE width with smaller control group (1%) is about 5 times (.032) the width with equal sized control group(.00605)**
 
 
 # 5. Sports Cards
