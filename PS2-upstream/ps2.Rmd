@@ -311,16 +311,15 @@ texas.treatment <- texas.summary[which(texas.summary$term2year == 1), ]$count
 texas.treatment
 
 # We'll create random sets in the same ratio
-texas_r <- randomize(texas.control, texas.treatment)
+texas_r <- g.randomize(texas.control, texas.treatment)
 table(texas_r)
-
 
 ```
 
 
 ```{r}
 # Repeating the expriment 10,000 times
-distribution.under.sharp.null.texas <- replicate(10000, est.ate(texas$bills_introduced, randomize(texas.control, texas.treatment)))
+distribution.under.sharp.null.texas <- replicate(10000, est.ate(texas$bills_introduced, g.randomize(texas.control, texas.treatment)))
 ```
 ```{r}
 # Visualizing the distribution of ATE estimates
@@ -348,7 +347,7 @@ se_texas
 
 
 ```
-**Answer: The standard error for ATE estimates in Texas is 9.776534**
+**Answer: The standard error for ATE estimates in Texas is 9.7734**
 
 ```{r}
 # ATE for arkansas
@@ -365,7 +364,7 @@ arkansas.treatment <- arkansas.summary[which(arkansas.summary$term2year == 1), ]
 arkansas.treatment
 
 # We'll create random sets in the same ratio
-arkansas_r <- randomize(arkansas.control, arkansas.treatment)
+arkansas_r <- g.randomize(arkansas.control, arkansas.treatment)
 table(arkansas_r)
 
 
@@ -374,7 +373,7 @@ table(arkansas_r)
 
 ```{r}
 # Repeating the expriment 10,000 times
-distribution.under.sharp.null.arkansas <- replicate(10000, est.ate(arkansas$bills_introduced, randomize(arkansas.control, arkansas.treatment)))
+distribution.under.sharp.null.arkansas <- replicate(10000, est.ate(arkansas$bills_introduced, g.randomize(arkansas.control, arkansas.treatment)))
 ```
 ```{r}
 plot(density(distribution.under.sharp.null.arkansas), 
@@ -395,7 +394,7 @@ arkansas.ate.mean
 se_arkansas <- sqrt(mean((distribution.under.sharp.null.arkansas-mean(distribution.under.sharp.null.arkansas))^2))
 se_arkansas
 ```
-**Answer: The standard error for ATE estimate for arkansas is 3.77561**
+**Answer: The standard error for ATE estimate for arkansas is 3.707**
 
 ## c. Use equation (3.10) to estimate the overall ATE for both states combined. 
 
@@ -458,7 +457,7 @@ se_comb <- sqrt((nrow(texas)*se_texas/nrow(d2))^2 + (nrow(arkansas)*se_arkansas/
 se_comb
 
 ```
-**Answer: Standard Error for the overall ATE is 5.006961**
+**Answer: Standard Error for the overall ATE is 4.99**
 
 ## f. Use randomization inference to test the sharp null hypothesis that the treatment effect is zero for senators in both states. 
 
@@ -474,7 +473,7 @@ texas_ate
 p_two_texas <- mean(abs(distribution.under.sharp.null.texas) >= abs(texas_ate))
 p_two_texas
 ``` 
-**Answer: p value for ATE for Texas is 0.0851**
+**Answer: p value for ATE for Texas is 0.0863**
 **p value is close but not less than .05. We cannot reject the SHARP NULL hypothesis**
 **Means that the observed effects of term changes could happen by chance**
 
@@ -490,7 +489,7 @@ arkansas_ate
 p_two_arkansas <- mean(abs(distribution.under.sharp.null.arkansas) >= abs(arkansas_ate))
 p_two_arkansas
 ```
-**Answer: p value for ATE for Arkansas is 0.0038**
+**Answer: p value for ATE for Arkansas is 0.0028**
 **p value is less than .05. We can reject the SHARP NULL hypothesis**
 **Means the effect of term change is statistically significant in Arkansas**
 
@@ -963,15 +962,15 @@ bids.control
 bids.treatment <- bids.summary[which(bids.summary$uniform_price_auction == 1), ]$count
 bids.treatment
 
-bids.random <- randomize(bids.control, bids.treatment)
+bids.random <- g.randomize(bids.control, bids.treatment)
 
 # DEBUG: For curiosity figuring out the est ATE of 2 of the randomization done above
 # Using the modified ATE formula done for Q a
-bids.rate <- est.ate(d5$bid, randomize(bids.control, bids.treatment))
+bids.rate <- est.ate(d5$bid, g.randomize(bids.control, bids.treatment))
 bids.rate
 
-bids.random <- randomize(bids.control, bids.treatment)
-bids.rate <- est.ate(d5$bid, randomize(bids.control, bids.treatment))
+bids.random <- g.randomize(bids.control, bids.treatment)
+bids.rate <- est.ate(d5$bid, g.randomize(bids.control, bids.treatment))
 bids.rate
 
 # So we get quite a different value from the actual and  quite different values each time
@@ -980,7 +979,7 @@ bids.rate
 ```{r}
 # Repeating the experiment 5k times and getting the distribution under sharp null
 # We are most interested in the differences in mean statistic
-dom.distribution.under.sharp.null <- replicate(5000, est.ate(d5$bid, randomize(bids.control, bids.treatment)))
+dom.distribution.under.sharp.null <- replicate(5000, est.ate(d5$bid, g.randomize(bids.control, bids.treatment)))
 
 
 # Average estimate for the ATE
@@ -1022,7 +1021,7 @@ sum(dom.distribution.under.sharp.null >= abs(bids.ate))
 p1 <- mean(dom.distribution.under.sharp.null >= abs(bids.ate))
 p1
 ```
-**Answer: The 2 sided p value from randomization inference is .0064**
+**Answer: The 2 sided p value from randomization inference is .0058**
 
 ## g. Compute the same p-value again using analytic formulas for a two-sample t-test from your earlier statistics course. (Also see part (a).)
 
@@ -1045,8 +1044,8 @@ table.p2
 ## h. Compare the two p-values in parts (e) and (f). Are they much different? Why or why not? How might your answer to this question change if the sample size were different?
 
 **p value from (e)(Regression): 0.006315**
-**p value from (f)(Randomization inference): .0064**
+**p value from (f)(Randomization inference): .0058**
 
-**Answer: The p values from regression and randomization inference are about the same (.0063, .0064). The sample size is not big. The distribution of outcomes in control are normal, but not in treatment. Randomization inference should give us a more accurate result in this situation.**
+**Answer: The p values from regression and randomization inference are different (.0063, .0058). The sample size is not big. The distribution of outcomes in control are normal, but not in treatment. Randomization inference should give us a more accurate result in this situation.**
 
-**We may see more difference among the results if sample size were smaller. The result from RI would be more trustworthy in that case.**
+**We may see more difference among the results if sample size were smaller. The result from RI would be more trustworthy in that case. With a larger sample size and normally ditributed outcomes, the difference in p values may not be much**
