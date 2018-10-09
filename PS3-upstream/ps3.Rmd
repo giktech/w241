@@ -238,25 +238,73 @@ print('p-value')
 **1> The places where the ads ran were selected due to certain characteristics(Quote: "Targeting to reach people in two of the most populated counties in Florida, Dade and Broward, which have a combined population of 4.2 million"). We are not sure if these characteristics (like the population density or total population) we included as control while determining the effects of the treatment (ADS). If not included, the ATE claimed would be biased and included some of the noise due to these factors**
 **2> In places where the ads ran, exposure was determined by selection characteristics by FB (Political interest, education, work, search phrases etc) (Quote: "Not only were our display ads based on the results of the Facebook research, but a lot of our ads ran to people who we originally aggregated on a remarketing list through the Facebook acquisition campaign."). Again, its not clear if the study controlled for, blocked or clustered around these distinguishing factors. Different treatment of these variables would lead to different estimates for ATE**
 
+*** 
 # 2 Peruvian Recycling 
 
 Look at [this article](https://drive.google.com/file/d/0BxwM1dZBYvxBVzQtQW9nbmd2NGM/view?usp=sharing) about encouraging recycling in Peru.  The paper contains two experiments, a "participation study" and a "participation intensity study."  In this problem, we will focus on the latter study, whose results are contained in Table 4 in this problem.  You will need to read the relevant section of the paper (starting on page 20 of the manuscript) in order to understand the experimental design and variables.  (*Note that "indicator variable" is a synonym for "dummy variable," in case you haven't seen this language before.*)
 
-a. In Column 3 of Table 4A, what is the estimated ATE of providing a recycling bin on the average weight of recyclables turned in per household per week, during the six-week treatment period?  Provide a 95% confidence interval.
+# a. In Column 3 of Table 4A, what is the estimated ATE of providing a recycling bin on the average weight of recyclables turned in per household per week, during the six-week treatment period?  Provide a 95% confidence interval.
+```{r}
+# Coefficient/ATE of providing a recycling bin on the average weight of recyclables
+lr_2a.coeff = .187
+lr_2a.coeff
+se_2a = .032
+se_2a
+# Confidence interval is +1 2 SE's
+c(lr_2a.coeff - 2 * se_2a, lr_2a.coeff + 2* se_2a)
+```
+**Answer: The ATE is .187**
+**The 95% confidence interval is [.123, .251]**
 
-b. In Column 3 of Table 4A, what is the estimated ATE of sending a text message reminder on the average weight of recyclables turned in per household per week?  Provide a 95% confidence interval.
+# b. In Column 3 of Table 4A, what is the estimated ATE of sending a text message reminder on the average weight of recyclables turned in per household per week?  Provide a 95% confidence interval.
+```{r}
+# Coefficient/ATE
+lr_2b.coeff = -.024
+lr_2b.coeff
+se_2b = .039
+se_2b
+# Confidence interval is +1 2 SE's
+c(lr_2b.coeff - 2 * se_2b, lr_2b.coeff + 2* se_2b)
+```
+**Answer: The ATE is -.024**
+**The 95% confidence interval is [-.102, .054]**
 
 c. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of providing a recycling bin?
+**Answer: The following outcome measures show statististically significant effects:**
+1. Percentage of visits turned in bag
+2. Avg. no. of bins turned in per week
+3. Avg. weight(in kg) turned in per week
+4. Avg. market value per week
+
 
 d. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of sending text messages?
+**Answer: No statistically significant effects (at 5% level)**
 
 e. Suppose that, during the two weeks before treatment, household A turns in 2kg per week more recyclables than household B does, and suppose that both households are otherwise identical (including being in the same treatment group).  From the model, how much more recycling do we predict household A to have than household B, per week, during the six weeks of treatment?   Provide only a point estimate, as the confidence interval would be a bit complicated.  This question is designed to test your understanding of slope coefficients in regression.
+```{r}
+# The difference in this outcome comes from the baseline weight difference
+lr_2d.coeff = .281
+lr_2d.baseline = 2
+lr_2d.diff = lr_2d.coeff * lr_2d.baseline
+lr_2d.diff
+```
+**Answer: The difference in outcome among A and B (weight turned in) comes from the different baseline (2Kg) in this case. A would turn in 0.562kg more recyclables/week in the treatment period**
 
 f. Suppose that the variable "percentage of visits turned in bag, baseline" had been left out of the regression reported in Column 1.  What would you expect to happen to the results on providing a recycling bin?  Would you expect an increase or decrease in the estimated ATE?  Would you expect an increase or decrease in the standard error?  Explain your reasoning.
 
+**Answer: if the variable "percentage of visits turned in bag, baseline" had been left out of the regression, we'll observe some if its effect to creep into the results of "providing a recycling bin". More precisely we may observe the following:**
+1. An overestimate of the ATE of providing a recycling bin i.e. the estimated ATE of providing the bin would go up. "Visits in a bag" has a +ve impact on recycling and in the absense of the variable, some of that effect would should be in "providing the bin" treatment
+2. We'll observe an increase in the Standard Error. Some of the variance related to the basline of bags turned in would show up in results of "providing a recyling bin"
+
 g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
+**Answer: No, "has cell phone" is not bad control. It brings out some of the variance and effect that would otherwise show up in the "Any SMS message" variable so serves a useful purpose (SMS would have not impact if you do not have a cell phone. That commonsense observation is mathematically captured by this variable). It is not an outcome of any other variable (a identification strategy for bad controls)**
 
 h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
+**Answer: If we remove "Has cell phone" variable, some of its coefficient/impact would show up in the "Any SMS message" variable. The coefficient of "Any SMS message" would go down as the impact would be distributed/diluted over subjects that have a phone and those that do not.**
+**Another way to explain the same is that the population that does not have a cell phone would not be effected by the SMS so would bring the estimated ATE/Coefficient down**
+
+
+***
 
 # 3 Multifactor Experiments 
 Staying with the same experiment, now lets think about multifactor experiments. 
