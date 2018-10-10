@@ -33,7 +33,7 @@ library(multiwayvcov)
 library(stargazer)
 ```
 
-# 0 Write Functions 
+## 0 Write Functions 
 You're going to be doing a few things a *number* of times -- calculating robust standard errors, calculating clustered standard errors, and then calculating the confidence intervals that are built off these standard errors. 
 
 *After* you've worked through a few of these questions, I suspect you will see places to write a function that will do this work for you. Include those functions here, if you write them. 
@@ -243,7 +243,7 @@ print('p-value')
 
 Look at [this article](https://drive.google.com/file/d/0BxwM1dZBYvxBVzQtQW9nbmd2NGM/view?usp=sharing) about encouraging recycling in Peru.  The paper contains two experiments, a "participation study" and a "participation intensity study."  In this problem, we will focus on the latter study, whose results are contained in Table 4 in this problem.  You will need to read the relevant section of the paper (starting on page 20 of the manuscript) in order to understand the experimental design and variables.  (*Note that "indicator variable" is a synonym for "dummy variable," in case you haven't seen this language before.*)
 
-# a. In Column 3 of Table 4A, what is the estimated ATE of providing a recycling bin on the average weight of recyclables turned in per household per week, during the six-week treatment period?  Provide a 95% confidence interval.
+## a. In Column 3 of Table 4A, what is the estimated ATE of providing a recycling bin on the average weight of recyclables turned in per household per week, during the six-week treatment period?  Provide a 95% confidence interval.
 ```{r}
 # Coefficient/ATE of providing a recycling bin on the average weight of recyclables
 lr_2a.coeff = .187
@@ -256,7 +256,7 @@ c(lr_2a.coeff - 2 * se_2a, lr_2a.coeff + 2* se_2a)
 **Answer: The ATE is .187**
 **The 95% confidence interval is [.123, .251]**
 
-# b. In Column 3 of Table 4A, what is the estimated ATE of sending a text message reminder on the average weight of recyclables turned in per household per week?  Provide a 95% confidence interval.
+## b. In Column 3 of Table 4A, what is the estimated ATE of sending a text message reminder on the average weight of recyclables turned in per household per week?  Provide a 95% confidence interval.
 ```{r}
 # Coefficient/ATE
 lr_2b.coeff = -.024
@@ -269,7 +269,7 @@ c(lr_2b.coeff - 2 * se_2b, lr_2b.coeff + 2* se_2b)
 **Answer: The ATE is -.024**
 **The 95% confidence interval is [-.102, .054]**
 
-c. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of providing a recycling bin?
+## c. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of providing a recycling bin?
 **Answer: The following outcome measures show statististically significant effects:**
 1. Percentage of visits turned in bag
 2. Avg. no. of bins turned in per week
@@ -277,10 +277,10 @@ c. Which outcome measures in Table 4A show statistically significant effects (at
 4. Avg. market value per week
 
 
-d. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of sending text messages?
+##d. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of sending text messages?
 **Answer: No statistically significant effects (at 5% level)**
 
-e. Suppose that, during the two weeks before treatment, household A turns in 2kg per week more recyclables than household B does, and suppose that both households are otherwise identical (including being in the same treatment group).  From the model, how much more recycling do we predict household A to have than household B, per week, during the six weeks of treatment?   Provide only a point estimate, as the confidence interval would be a bit complicated.  This question is designed to test your understanding of slope coefficients in regression.
+## e. Suppose that, during the two weeks before treatment, household A turns in 2kg per week more recyclables than household B does, and suppose that both households are otherwise identical (including being in the same treatment group).  From the model, how much more recycling do we predict household A to have than household B, per week, during the six weeks of treatment?   Provide only a point estimate, as the confidence interval would be a bit complicated.  This question is designed to test your understanding of slope coefficients in regression.
 ```{r}
 # The difference in this outcome comes from the baseline weight difference
 lr_2d.coeff = .281
@@ -290,16 +290,16 @@ lr_2d.diff
 ```
 **Answer: The difference in outcome among A and B (weight turned in) comes from the different baseline (2Kg) in this case. A would turn in 0.562kg more recyclables/week in the treatment period**
 
-f. Suppose that the variable "percentage of visits turned in bag, baseline" had been left out of the regression reported in Column 1.  What would you expect to happen to the results on providing a recycling bin?  Would you expect an increase or decrease in the estimated ATE?  Would you expect an increase or decrease in the standard error?  Explain your reasoning.
+## f. Suppose that the variable "percentage of visits turned in bag, baseline" had been left out of the regression reported in Column 1.  What would you expect to happen to the results on providing a recycling bin?  Would you expect an increase or decrease in the estimated ATE?  Would you expect an increase or decrease in the standard error?  Explain your reasoning.
 
 **Answer: if the variable "percentage of visits turned in bag, baseline" had been left out of the regression, we'll observe some if its effect to creep into the results of "providing a recycling bin". More precisely we may observe the following:**
 1. An overestimate of the ATE of providing a recycling bin i.e. the estimated ATE of providing the bin would go up. "Visits in a bag" has a +ve impact on recycling and in the absense of the variable, some of that effect would should be in "providing the bin" treatment
 2. We'll observe an increase in the Standard Error. Some of the variance related to the basline of bags turned in would show up in results of "providing a recyling bin"
 
-g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
+## g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
 **Answer: No, "has cell phone" is not bad control. It brings out some of the variance and effect that would otherwise show up in the "Any SMS message" variable so serves a useful purpose (SMS would have not impact if you do not have a cell phone. That commonsense observation is mathematically captured by this variable). It is not an outcome of any other variable (a identification strategy for bad controls)**
 
-h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
+## h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
 **Answer: If we remove "Has cell phone" variable, some of its coefficient/impact would show up in the "Any SMS message" variable. The coefficient of "Any SMS message" would go down as the impact would be distributed/diluted over subjects that have a phone and those that do not.**
 **Another way to explain the same is that the population that does not have a cell phone would not be effected by the SMS so would bring the estimated ATE/Coefficient down**
 
@@ -309,10 +309,48 @@ h. If we were to remove the "has cell phone" variable from the regression, what 
 # 3 Multifactor Experiments 
 Staying with the same experiment, now lets think about multifactor experiments. 
 
-a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
-b. In the results of Table 4B, describe the baseline category. That is, in English, how would you describe the attributes of the group of people for whom all dummy variables are equal to zero?
-c. In column (1) of Table 4B, interpret the magnitude of the coefficient on "bin without sticker."  What does it mean?
+## a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
+
+** Answer: The experiment's design has the following:** 
+
+1. 5 Dependent variables:
+  + % of visits turned in bag
+  + No. of bins turned in per week
+  + Weight or recyclables turned in
+  + Market value of recyclables turned in
+  + % contamination per week
+2. 4 Independent variables:
+  + Bin with sticker -  indicator
+  + Bin without sticker - indicator
+  + SMS message - indicator
+  + Has cell phone - indicator
+3. 5 Baseline (as independent variables) variables measured pre-treatment (2 weeks before experiment). These are included in the regression equation for individual outcomes (like baseline for "visits with bags" is included when measuring this outcome):
+  + baseline for visits with bag
+  + baseline of bins turned in
+  + baseline of weight of recyclables
+  + baseline for the market value of recyclables
+  + baseline of % contamination per week
+4. Street fixed effects are included in the complete equation as the randomization was blocked by street.
+
+## b. In the results of Table 4B, describe the baseline category. That is, in English, how would you describe the attributes of the group of people for whom all dummy variables are equal to zero?
+
+**Answer: "baseline" is a set of variables that capture the pre-experiment values (2 weeks before the expriment) of all the outcome variables. As the experimental treatments are not applied yet, all the dummy/indicator variables are 0. These are significant (theoratically and also via experiment's results) as can explain some of the effects seen in the outcome variables during the experiment**
+
+* Below are the 5 Baseline (as independent variables) variables measured pre-treatment (2 weeks before experiment). These are included in the regression equation for individual outcomes (like baseline for "visits with bags" is included when measuring this outcome):
+  + baseline for visits with bag
+  + baseline of bins turned in
+  + baseline of weight of recyclables
+  + baseline for the market value of recyclables
+  + baseline of % contamination per week
+
+## c. In column (1) of Table 4B, interpret the magnitude of the coefficient on "bin without sticker."  What does it mean?
+
+**Answer: The coefficient is .035 with a SE of .015. The value is more than 2SE. Its marked as statistically significant at the 5% confidence level.**
+**The 95% Confidence interval based on these values would be [.005, .055]**
+**The interpretation would be that a bin (even a generic one without a sticker) creates a positive impact on recycling (education and lowering of the barrier). some of this impact shows up in visits that are not using the bin also. The impact is not huge (The ATE is one SE bigger than the baseline), but is measurable (The 95% confidence interval is +ve [.005, .055])**
+
 d. In column (1) of Table 4B, which seems to have a stronger treatment effect, the recycling bin with message sticker, or the recycling bin without sticker?  How large is the magnitude of the estimated difference?
+**Answer: **
 e. Is this difference you just described statistically significant?  Explain which piece of information in the table allows you to answer this question.
 f. Notice that Table 4C is described as results from "fully saturated" models.  What does this mean?  Looking at the list of variables in the table, explain in what sense the model is "saturated."
 
