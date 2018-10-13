@@ -311,7 +311,7 @@ Staying with the same experiment, now lets think about multifactor experiments.
 
 ## a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
 
-** Answer: The experiment's design has the following:** 
+** Answer: TBD The experiment's design has the following:** 
 
 1. 5 Dependent variables:
   + % of visits turned in bag
@@ -350,9 +350,18 @@ Staying with the same experiment, now lets think about multifactor experiments.
 **The interpretation would be that a bin (even a generic one without a sticker) creates a positive impact on recycling (education and lowering of the barrier). some of this impact shows up in visits that are not using the bin also. The impact is not huge (The ATE is one SE bigger than the baseline), but is measurable (The 95% confidence interval is +ve [.005, .055])**
 
 d. In column (1) of Table 4B, which seems to have a stronger treatment effect, the recycling bin with message sticker, or the recycling bin without sticker?  How large is the magnitude of the estimated difference?
-**Answer: **
+
+**Answer: The "recycling bin with sticker" has a stronger treatment effec. The magnitude of the difference is (.055 - .035 = .025) .025**
+**Both the coefficients have the same SE, so that does not influence the difference in magnitudes calculation**
+**A thing to note is that recycling bin "with sticker"" is significant at a 1% confidence level. "without sticker" is significant at 5% confidence level**
+
 e. Is this difference you just described statistically significant?  Explain which piece of information in the table allows you to answer this question.
+
+**Answer: The difference above (.025) is not statistically significant. The SE (.015) for both measurement helps us with this conclusion**
+**If the estimates err in opposite directions (-.015 in one case and +.015 in the other) there could be cases where the difference in the outcomes (.025 for the point estimates) would reduce to 0**
+
 f. Notice that Table 4C is described as results from "fully saturated" models.  What does this mean?  Looking at the list of variables in the table, explain in what sense the model is "saturated."
+**Answer: TBD The model is "saturated" as it includes all the independent variables and there interaction terms**
 
 # 4 Now! Do it with data 
 Download the data set for the recycling study in the previous problem, obtained from the authors. We'll be focusing on the outcome variable Y="number of bins turned in per week" (avg_bins_treat).
@@ -410,45 +419,89 @@ h. Now reproduce the results of column 2 in Table 4B, estimating separate treatm
 
 ```
 
+*** 
+
 # 5 A Final Practice Problem 
 Now for a fictional scenario. An emergency two-week randomized controlled trial of the experimental drug ZMapp is conducted to treat Ebola. (The control represents the usual standard of care for patients identified with Ebola, while the treatment is the usual standard of care plus the drug.) 
 
 Here are the (fake) data. 
 
 ```{r}
-d <- read.csv("./data/ebola_rct2.csv")
+d5 <- read.csv("./data/ebola_rct2.csv")
 head(d)
+```
+```{r}
+# Getting more famiiliar with the data
+summary(d5)
 ```
 
 You are asked to analyze it. Patients' temperature and whether they are vomiting is recorded on day 0 of the experiment, then ZMapp is administered to patients in the treatment group on day 1. Vomiting and temperature is again recorded on day 14.
 
-a. Without using any covariates, answer this question with regression: What is the estimated effect of ZMapp (with standard error in parentheses) on whether someone was vomiting on day 14? What is the p-value associated with this estimate?
+## a. Without using any covariates, answer this question with regression: What is the estimated effect of ZMapp (with standard error in parentheses) on whether someone was vomiting on day 14? What is the p-value associated with this estimate?
 
 ```{r}
+# Regressing vomiting on day 14 on the treatment
+lr_v1 = lm(vomiting_day14 ~ treat_zmapp, data = d5)
+summary(lr_v1)
 
 ```
 
-b. Add covariates for vomiting on day 0 and patient temperature on day 0 to the regression from part (a) and report the ATE (with standard error). Also report the p-value.
+**Answer: The estimated effect is -0.23770(0.08563)**
+** The p-value is 0.006595**
+
+## b. Add covariates for vomiting on day 0 and patient temperature on day 0 to the regression from part (a) and report the ATE (with standard error). Also report the p-value.
 
 ```{r}
+## Adding 2 covariates to the regression above
+lr_v2 = lm(vomiting_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0, data = d5)
+summary(lr_v2)
 
 ```
 
-c. Do you prefer the estimate of the ATE reported in part (a) or part (b)? Why?
+**Answer: The coefficient/ATE is -0.16554(0.07567)**
+**The p-value is 7.684e-08**
 
-d. The regression from part (b) suggests that temperature is highly predictive of vomiting. Also include temperature on day 14 as a covariate in the regression from part (b) and report the ATE, the standard error, and the p-value.
+## c. Do you prefer the estimate of the ATE reported in part (a) or part (b)? Why?
+**Answer: I prefer the estimate in part (b). Its intuitive that patient's medical condition on day 14 would depend to some extent on there baseline condition on day 0. Leaving intuition aside, the analysis above shows that temperature on day 0 is statistically significant at a 5% confidence level. The coefficient of "temperature_day0" is .20 which is ~3 times the standard error of .07634**
 
-```{r}
-
-```
-
-e. Do you prefer the estimate of the ATE reported in part (b) or part (d)? Why?
-
-f. Now let's switch from the outcome of vomiting to the outcome of temperature, and use the same regression covariates as in part (b). Test the hypothesis that ZMapp is especially likely to reduce men's temperatures, as compared to women's, and describe how you did so. What do the results suggest?
+## d. The regression from part (b) suggests that temperature is highly predictive of vomiting. Also include temperature on day 14 as a covariate in the regression from part (b) and report the ATE, the standard error, and the p-value.
 
 ```{r}
+## Adding temperature on day 14 a covariate to the regression above
+lr_v3 = lm(vomiting_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0 + temperature_day14, data = d5)
+summary(lr_v3)
+```
+**Answer: The ATE(SE) are -0.12010(0.07768).**
+**The p-value is 4.545e-08**
+
+## e. Do you prefer the estimate of the ATE reported in part (b) or part (d)? Why?
+
+**Answer: I prefer the estimate in part(b). (d) adds temperature on day 14 as a covariate. This may be "bad control" as the "temperature on day 14" may be an effect of the treatment. The "temperature on day 14" might actually be impacted by both the treatment and the baseline variables (temperature and vomiting on day 0). Adding "temperature on day 14 as a covariate" adds noise to the causal relationship (that we are trying to measure) between the outcome and independent variables (medicine, baseline)**
+
+## f. Now let's switch from the outcome of vomiting to the outcome of temperature, and use the same regression covariates as in part (b). Test the hypothesis that ZMapp is especially likely to reduce men's temperatures, as compared to women's, and describe how you did so. What do the results suggest?
+
+```{r}
+# Regressing Day 14 temperature on the treatment and covariates
+
+# First doing it for the entire sample. Sex is not a covariate
+lr_v4 = lm(temperature_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0, data = d5)
+summary(lr_v4)
+```
+*Note: We get an ATE estimate of -0.7554 (0.2587) with significance at the 5% confidence level. The p value is 2.227e-06*
+
+```{r}
+# Trying the same regression with sex (male, Female) as a indicator variable Male = 1
+# We also add the interaction term to measure the impact of "male" on treatment
+
+lr_v5 = lm(temperature_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0 + male + male*treat_zmapp, data = d5)
+summary(lr_v5)
 
 ```
+** Answer: One way to find out the relationship between sex and treatment would be to make "male" an indicator variable/covariate and add both the variable and the interaction term in the regression equation. The coefficient of the interaction term (male * treat_zmap) would tell us about the effect of being both "male" and in "treatment"**
+
+**"treat_zmapp:male -2.07669    0.19164 -10.836  < 2e-16 ***"** captures the result of the regression
+** The coefficient of the interaction term is -2.07669(.1916) which is statistically significant at 1% confidence level**
+** The result tells us that being "male" and in "treatment" is estimated to cause a -2.07 reduction (~ 10 times the standard error) in temperature from the case where this interaction is not present (women in treatment)**
 
 g. Suppose that you had not run the regression in part (f). Instead, you speak with a colleague to learn about heterogenous treatment effects. This colleague has access to a non-anonymized version of the same dataset and reports that he had looked at heterogenous effects of the ZMapp treatment by each of 10,000 different covariates to examine whether each predicted the effectiveness of ZMapp on each of 2,000 different indicators of health, for 20,000,000 different regressions in total. Across these 20,000,000 regressions your colleague ran, the treatment's interaction with gender on the outcome of temperature is the only heterogenous treatment effect that he found to be statistically significant. He reasons that this shows the importance of gender for understanding the effectiveness of the drug, because nothing else seemed to indicate why it worked. Bolstering his confidence, after looking at the data, he also returned to his medical textbooks and built a theory about why ZMapp interacts with processes only present in men to cure. Another doctor, unfamiliar with the data, hears his theory and finds it plausible. How likely do you think it is ZMapp works especially well for curing Ebola in men, and why? (This question is conceptual can be answered without performing any computation.)
 
