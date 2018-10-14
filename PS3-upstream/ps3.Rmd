@@ -497,22 +497,32 @@ lr_v5 = lm(temperature_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0 + 
 summary(lr_v5)
 
 ```
-** Answer: One way to find out the relationship between sex and treatment would be to make "male" an indicator variable/covariate and add both the variable and the interaction term in the regression equation. The coefficient of the interaction term (male * treat_zmap) would tell us about the effect of being both "male" and in "treatment"**
+** Answer: One way to find out the relationship between sex and treatment would be to make "male" an indicator variable/covariate and add both the variable and the interaction term in the regression equation. The coefficient of the interaction term (male * treat_zmap) would tell us about the delta effect of being both "male" and in "treatment"**
 
 **"treat_zmapp:male -2.07669    0.19164 -10.836  < 2e-16 ***"** captures the result of the regression
 ** The coefficient of the interaction term is -2.07669(.1916) which is statistically significant at 1% confidence level**
-** The result tells us that being "male" and in "treatment" is estimated to cause a -2.07 reduction (~ 10 times the standard error) in temperature from the case where this interaction is not present (women in treatment)**
 
-g. Suppose that you had not run the regression in part (f). Instead, you speak with a colleague to learn about heterogenous treatment effects. This colleague has access to a non-anonymized version of the same dataset and reports that he had looked at heterogenous effects of the ZMapp treatment by each of 10,000 different covariates to examine whether each predicted the effectiveness of ZMapp on each of 2,000 different indicators of health, for 20,000,000 different regressions in total. Across these 20,000,000 regressions your colleague ran, the treatment's interaction with gender on the outcome of temperature is the only heterogenous treatment effect that he found to be statistically significant. He reasons that this shows the importance of gender for understanding the effectiveness of the drug, because nothing else seemed to indicate why it worked. Bolstering his confidence, after looking at the data, he also returned to his medical textbooks and built a theory about why ZMapp interacts with processes only present in men to cure. Another doctor, unfamiliar with the data, hears his theory and finds it plausible. How likely do you think it is ZMapp works especially well for curing Ebola in men, and why? (This question is conceptual can be answered without performing any computation.)
+** The result tells us that being "male" and in "treatment" is estimated to cause a -2.07 reduction (~ 10 times the standard error) in temperature from the case where this interaction is not present (i.e. women in treatment)**
 
-```{r}
+## g. Suppose that you had not run the regression in part (f). Instead, you speak with a colleague to learn about heterogenous treatment effects. This colleague has access to a non-anonymized version of the same dataset and reports that he had looked at heterogenous effects of the ZMapp treatment by each of 10,000 different covariates to examine whether each predicted the effectiveness of ZMapp on each of 2,000 different indicators of health, for 20,000,000 different regressions in total. Across these 20,000,000 regressions your colleague ran, the treatment's interaction with gender on the outcome of temperature is the only heterogenous treatment effect that he found to be statistically significant. He reasons that this shows the importance of gender for understanding the effectiveness of the drug, because nothing else seemed to indicate why it worked. Bolstering his confidence, after looking at the data, he also returned to his medical textbooks and built a theory about why ZMapp interacts with processes only present in men to cure. Another doctor, unfamiliar with the data, hears his theory and finds it plausible. How likely do you think it is ZMapp works especially well for curing Ebola in men, and why? (This question is conceptual can be answered without performing any computation.)
 
-```
+**Answer: I would be sceptical of the efficacy of ZMapp (for curing Ebola in men) based on above paragraph alone. With 20M regressions (10K covariates, 2K health outcomes), it is likely that one finds an interaction with statistical significance by chance alone.**
+**From "Field Experiments": With 20 covariates, 1% confidence level,  a statistically significant effect for a sub group can happen for 1 in 6 research studies**
+**Belief in such a claim would require a planned experiment where the treatment is varied along with the variable/sub-group under observation for the heterogenious effect**
 
-h. Now, imagine that what described in part (g) did not happen, but that you had tested this heterogeneous treatment effect, and only this heterogeneous treatment effect, of your own accord. Would you be more or less inclined to believe that the heterogeneous treatment effect really exists? Why?
 
-```{r}
+## h. Now, imagine that what described in part (g) did not happen, but that you had tested this heterogeneous treatment effect, and only this heterogeneous treatment effect, of your own accord. Would you be more or less inclined to believe that the heterogeneous treatment effect really exists? Why?
 
-```
+**Answer: I would be more inclined to believe in the effect if it was one (or part of a small number of such effects), tested by planning/design, as part of the experiment. The experiment in this case would have to vary the subgroup characteristic we are testing (sex in this case) along with the main treatment (Multi- factor experiment).**
+**If the experiment is not designed like above, the sub-group/co-variate analysis does not give us causal information. We know that treatment is more effective in groups of men, but we cannot establish why?**
 
-i. Another colleague proposes that being of African descent causes one to be more likely to get Ebola. He asks you what ideal experiment would answer this question. What would you tell him?  (*Hint: refer to Chapter 1 of Mostly Harmless Econometrics.*)
+## i. Another colleague proposes that being of African descent causes one to be more likely to get Ebola. He asks you what ideal experiment would answer this question. What would you tell him?  (*Hint: refer to Chapter 1 of Mostly Harmless Econometrics.*)
+
+**Answer: This may be one of the FUQ's (defined in MHE chapter 1). It is impossible to come up with a practical experiment that can answer this question.**
+**If we start with randomly chosen people and observe them for Ebola, we can create a record for who gets it. If the group can be divided into those of African descent and those not, we'll be able to observe if the there's more Ebola in one group over the other. Even if we find that more from Aftrican descent get Ebola in our study, we'll not be able to establish a causal relationship due to multiple reasons:**
+1. There's no precise intervention which'll help us do an experiment to establish cause
+2. There are too many confounding factors (Conditions at birth, Time spent in Africa, African parents but born outside......) that are difficult to control for
+
+**The answer to this question does not really help also. One cannot change one's descent. The answer could help spark further investigation th ough i.e. there could be more precise questions on why a subgroup (of the population) is more prone to EBOLA**
+
+
