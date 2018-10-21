@@ -455,11 +455,11 @@ lr4c.confint["bin",]
 
 **Answer: The 95% confidence interval with the street effects is [0.08042873 0.14734483 ]**
 
-d. Recall that the authors described their experiment as "stratified at the street level," which is a synonym for blocking by street.  Explain why the confidence interval with fixed effects does not differ much from the previous one.
+## d. Recall that the authors described their experiment as "stratified at the street level," which is a synonym for blocking by street.  Explain why the confidence interval with fixed effects does not differ much from the previous one.
 
 **Answer: The 2 intervals differ very little (<.01) as the effect of the street is partially captured by the baseline. Its  intuitive that certain neighborhoods may have higher inclination to recycle, which can be captured mostly in the preexperiment measurements (baseline)**
 
-e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
+## e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
 
 ```{r}
 # Add the column "no_cell" to the data
@@ -468,11 +468,11 @@ head(d4)
 
 ```
 
-f. Now add "no cell phone" as a covariate to the previous regression.  Provide a 95% confidence interval for the treatment effect.  Explain why this confidence interval does not differ much from the previous one.
+## f. Now add "no cell phone" as a covariate to the previous regression.  Provide a 95% confidence interval for the treatment effect.  Explain why this confidence interval does not differ much from the previous one.
 
 ```{r}
 # Adding "no_cell to the regression"
-# TBD: Do we not need an interaction term? 
+# Without the interaction term first 
 lr4f = lm(avg_bins_treat ~ bin + base_avg_bins_treat + streetF + no_cell, data = d4)
 lr4f.summary = summary(lr4f)
 print('Coefficient for bin')
@@ -483,12 +483,36 @@ lr4f.confint = confint(lr4f, level = .95)
 print('95% confidence interval')
 lr4f.confint["bin",]
 ```
-
-**Answer: The 95% confidence interval with the "no cell" is [0.08166792 0.14853357]**
-**The confidence interval matches the previous one as having a cell phone (or not) does not effect the recycling/binning behavior (unless we introduce the impact of an SMS message)**
+*Correlation between  bin, baseline, and cell phone would be good to know before answering this question*
+```{r warning=FALSE}
+# Correlation between  bin, baseline, and cell phone would be good to know before answering this question
+scatterplotMatrix( ~ bin + base_avg_bins_treat + no_cell, data = d4, main = "Scatterplot Matrix for key variables")
+```
+*Repeating the regression above with the interaction term*
+```{r}
+# And to make sure we account for the interaction, we can inlude the interaction term
+lr4f = lm(avg_bins_treat ~ bin + base_avg_bins_treat + streetF + no_cell + no_cell * bin, data = d4)
+lr4f.summary = summary(lr4f)
+print('Coefficient for bin')
+lr4f.summary$coefficients["bin",]
+print('Coefficient for no_cell')
+lr4f.summary$coefficients["no_cell",]
+lr4f.confint = confint(lr4f, level = .95)
+print('Coefficient for no_cell*bin')
+lr4f.summary$coefficients["bin:no_cell",]
+print('95% confidence interval')
+lr4f.confint["bin",]
+```
+**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08166792 0.14853357] without the interaction term**
+**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08108329 0.16826147] with the interaction term**
+**The confidence interval almost matches the previous one as having a cell phone (or not) does not explain any of the variance in the primary treatment effect (bin). The variables are not correlated. The correlation charts and the coefficient for the interation term [-0.02310269(0.03440852)] show the same**
 **TBD**
 
-g. Now let's add in the SMS treatment.  Re-run the previous regression with "any SMS" included.  You should get the same results as in Table 4A.  Provide a 95% confidence interval for the treatment effect of the recycling bin.  Explain why this confidence interval does not differ much from the previous one.
+```{r}
+# lr4f.summary$coefficients
+```
+
+## g. Now let's add in the SMS treatment.  Re-run the previous regression with "any SMS" included.  You should get the same results as in Table 4A.  Provide a 95% confidence interval for the treatment effect of the recycling bin.  Explain why this confidence interval does not differ much from the previous one.
 
 ```{r}
 # Adding SMS to the regression
@@ -504,16 +528,66 @@ print('95% confidence interval')
 lr4g.confint["bin",]
 
 ```
+*Checking for correlation among bin and sms. We're not expecting any*
+```{r warning=FALSE}
+# Correlation between  bin, baseline, and cell phone would be good to know before answering this question
+scatterplotMatrix( ~ bin + sms, data = d4, main = "Scatterplot Matrix for key variables")
+```
+*Repeating the regression with the interaction terms*
 
-**Answer: The 95% confidence interval with SMS included in the regression is [0.08160886 0.14849843]**
-**TBD**
+```{r}
+# Adding SMS to the regression
+# TBD: Do we not need an interaction term? 
+lr4g = lm(avg_bins_treat ~ bin + base_avg_bins_treat + streetF + no_cell + sms + bin*sms, data = d4)
+lr4g.summary = summary(lr4g)
+print('Coefficient for bin')
+lr4g.summary$coefficients["bin",]
+print('Coefficient for sms')
+lr4g.summary$coefficients["sms",]
+print('Coefficient for bin:sms')
+lr4g.summary$coefficients["bin:sms",]
+lr4g.confint = confint(lr4g, level = .95)
+print('95% confidence interval')
+lr4g.confint["bin",]
+
+```
+
+**Answer: Yes, we get the same results as table 4A**
+**Answer: The 95% confidence interval with SMS included in the regression is [0.08160886 0.14849843] without the interaction term**
+**The 95% confidence interval with SMS included in the regression is [0.06936329 0.14994262] with the interaction term**
+**The confidence interval does not change again as "sms" does not explain any of the variance/noise in the treatment effect. SMS and bin are fairly independent.**
 
 h. Now reproduce the results of column 2 in Table 4B, estimating separate treatment effects for the two types of SMS treatments and the two types of recycling-bin treatments.  Provide a 95% confidence interval for the effect of the unadorned recycling bin.  Explain how your answer differs from that in part (g), and explain why you think it differs.
 
 ```{r}
+# Adding 2 types of SMS treatment
+# TBD: Do we not need an interaction term? Assuming not as we are trying to reproduce the results of table 4B
+lr4h = lm(avg_bins_treat ~ bin_g + bin_s + base_avg_bins_treat + streetF + no_cell + sms_p + sms_g, data = d4)
+lr4h.summary = summary(lr4h)
+print('Coefficient for bin_g')
+lr4h.summary$coefficients["bin_g",]
+print('Coefficient for bin_s')
+lr4h.summary$coefficients["bin_s",]
+print('Coefficient for sms_g')
+lr4h.summary$coefficients["sms_g",]
+print('Coefficient for sms_p')
+lr4h.summary$coefficients["sms_p",]
+
+lr4h.confint = confint(lr4h, level = .95)
+print('95% confidence interval for the un-adorned bin')
+lr4h.confint["bin_g",]
+
 
 ```
+**Answer: The results match column 2 of Table 4b**
 
+1. The treatment effect of Bin without Sticker is: 1.031902e-01 (2.188886e-02)
+2. The treatment effect of Bin with Sticker is is: 1.278129e-01 (2.223628e-02)
+3. The treatment effect of generic SMS is: 0.01970712 (0.02519764)
+4. The treatment effect of specific SMS is: -0.008041152  (0.025036933)
+
+**Answer: The 95% confidence interval with generic recycling bin is [0.06025627 0.14612416 ]**
+**The confidence interval is a little tighter from that in part (g). The increased precision comes by breaking the "bins" variable into more precise "bin_g" and "bin_s". "bin_s" (bins with stickers) is able to explain some of the variance that was earlier in the confidence interval for "bin". **
 *** 
 
 # 5 A Final Practice Problem 
