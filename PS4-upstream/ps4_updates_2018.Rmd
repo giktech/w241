@@ -70,12 +70,12 @@ exp.cace
 
 ## b. Suppose that an experiment were conducted on your pool of subjects. In what ways would the estimated CACE be informative or misleading? 
 
-**Answer: The estimated CACE would add information on the impact of the treatment, on actual subjects that were treated i.e. is the real effect of the treatment. If we calculate the average effect over all the subjects in the treatment group (ATE), we make an implicit assumptions that the treatment effect for "never takers" is 0, which is inaccurate, and could lead to an underestimate of the treatment effect**
+**Answer: The estimated CACE would add information on the impact of the treatment, on subjects that were "actually" treated i.e. is the real effect of the treatment. If we calculate the average effect over all the subjects in the treatment group (ATE), we make an implicit assumptions that the treatment effect for "never takers" is 0, which is inaccurate, and could lead to an underestimate of the treatment effect**
 
 ## c. Which population is more relevant to study for future decision making: the set of Compliers, or the set of Compliers plus Never-Takers? Why?
 
-**Answer: The population of compliers is more important for future decision making. That's where the information on real effect of the treatment comes from. Nothing on the actual treatment effect is contributed by the "never takers"**
-**There may be one reason to briefly look at "never takers". It is to get a idea of the ratio of the 2 groups in the overall population. This may be useful in some experiments where its hard to know if the treatment was carried out completely**
+**Answer: The population of compliers is more important for future decision making. That's where the information on real effect of the treatment comes from. Nothing on the "actual" treatment effect is contributed by the "never takers". This is true for most experiment on the efficacy of drugs**
+*There may be some reasons to briefly look at "never takers". It is to get a idea of the ratio of the 2 groups in the overall population. This may be useful in some experiments where we are interested in the "intent to treat" effect instead of the "actual" treatment effect on the treated. Many expriments to influence policy (like rebates for buying health insurance) fall in this category*
 
 # Turnout to Vote 
 Suppose that a researcher hires a group of canvassers to contact a set of 1,000 voters randomly assigned to a treatment group. When the canvassing effort concludes, the canvassers report that they successfully contacted 500 voters in the treatment group, but the truth is that they only contacted 250. When voter turnout rates are tabulated for the treatment and control groups, it turns out that 400 of the 1,000 subjects in the treatment group voted, as compared to 700 of the 2,000 subjects in the control group (none of whom were contacted). 
@@ -112,8 +112,8 @@ c. Do the canvassers' exaggerated reports make their efforts seem more or less e
 **Answer: The exaggerated reports make the canvassers' efforts seem less effective (Lower estimate for CACE)**
 **Effectiveness** can be defined in terms of either ITT or CACE. We could either define it as an increasing +ve value (greater than 0) for the ITT or a positive value greater than ITT for CACE.
 **The definition matters as forces us to recognize exactly what we want to measure before the expriment.**
-**In this specific example, we'll concentrate on ITT if we're trying to measure the effectiveness of 1> reaching people and 2> converting those we reach to voters**
-**We'll concentrate on CACE if our concern is limited to measure the reate of turnout for those that we are able to contact (2> above)**
+**In this specific example, we'll concentrate on ITT if we're trying to measure the effectiveness of 1> Trying to reach out to people or knocking on doors and 2> Talking to folks who open the door after the knock**
+**We'll concentrate on CACE if our concern is limited to measure the effect on turnout for those that we are able to contact (2> above)**
 **Defining the primary outcome before the experiment would help pick the right metric for measurement**
 
 

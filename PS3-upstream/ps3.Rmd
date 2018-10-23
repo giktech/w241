@@ -20,12 +20,12 @@ Some guidelines for submitting problem sets in this course:
 - Please ensure that someone (us!) can compile your solution set. The best way is to use the web-hosted links we've provided.
 --> 
 
-```{r, results='hide'} 
+```{r, results='hide', message=FALSE} 
 # load packages 
 library(data.table)
 library(foreign)
 ```
-```{r}
+```{r, message=FALSE}
 # Libraries for robust and clustered standard errors
 library(lmtest)
 library(sandwich)
@@ -88,7 +88,7 @@ study1 <- d1[which(d1$studyno == 1),]
 head(study1)
 summary(study1)
 ```
-*Note: We see 1276 observations in study 1*
+*Note: We see 1256 observations in study 1. Looking at the distribution of name_recall below*
 ```{r}
 # Regress name_recall on treat_ad
 
@@ -113,11 +113,11 @@ lr1$ols.confint
 # lr1$ols.confint
 
 ```
-**Answer: The confidence interval is: treat_ad    -0.05101765 0.03142188**
+**Answer: The confidence interval is: treat_ad  -0.05101765 0.03142188**
 
 ## b. What are the clusters in Broockman and Green's study? Why might taking clustering into account increase the standard errors?
-**Answer: Clusters in the study are composed of individuals with the same age, gender and location**
-**The members of above clusters have little variance in study relevant attributes (age, gender, location). When assigned as a grouop, they suppress the variance in Y leading ot a smaller estimate for errors. When we take clustering into account, we correct for this, leading to an inflation in the SE's.**
+**Answer: Clusters in the study are composed of similar individuals: with the same age, gender and location**
+**The members of above clusters have very little variance in study relevant attributes: age, gender, location but there's significant variance between the clusters. When assigned as a group, this assignment suppresses the variance in Y leading to a smaller estimate for errors. When we take clustering into account, we correct for this, leading to bigger SE's.**
 
 ## c. Now repeat part (a), but taking clustering into account. That is, compute a confidence interval for the effect of the ad on candidate name recognition in Study 1, but now correctly accounting for the clustered nature of the treatment assignment. If you're not familiar with how to calculate these clustered and robust estimates, there is a demo worksheet that is available in our course repository: `./code/week5clusterAndRobust.Rmd`.
 ```{r}
@@ -190,9 +190,14 @@ print('Treatment effect estimate')
 lr3$coefficients['treat_ad']
 print('p-value')
 ```
+```{r}
+# t test of the coefficients
+coeftest(lr3, lr3$cluster.vcov)
+```
+
 **Answer: The cluster confidence interval from all studies combined is -0.2085342 -0.1016123**
 ** The treatment effect is -0.1550732**
-**The p value of close to 0 (< 2.2e-16)**
+** The p value is close to 0 (7.344e-09)**
 
 ## f. Now, repeat part (e) but include a dummy variable (a 0/1 binary variable) for whether the data are from Study 1 or Study 2. What is the treatment effect estimate and associated p-value?
 
@@ -223,9 +228,14 @@ print('Treatment effect estimate')
 lr4$coefficients['treat_ad']
 print('p-value')
 ```
-**Answer: The cluster confidence interval from all studies combined is -0.04760609  0.03405559**
+```{r}
+# t test of the coefficients
+coeftest(lr4, lr4$cluster.vcov)
+```
+
+**Answer: The cluster confidence interval from all studies combined is [-0.04760609  0.03405559]**
 ** The treatment effect is -0.006775249**
-**The p value of close to 0 (< 2.2e-16)**
+**The p value is .74**
 
 
 ## g. Why did the results from parts (e) and (f) differ? Which result is biased, and why? (Hint: see pages 75-76 of Gerber and Green, with more detailed discussion optionally available on pages 116-121.)
@@ -299,9 +309,11 @@ lr_2d.diff
 2. We'll observe an increase in the Standard Error. Some of the variance related to the basline of bags turned in would show up in results of "providing a recyling bin"
 
 ## g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
+
 **Answer: No, "has cell phone" is not bad control. It brings out some of the variance and effect that would otherwise show up in the "Any SMS message" variable so serves a useful purpose (SMS would have not impact if you do not have a cell phone. That commonsense observation is mathematically captured by this variable). It is not an outcome of any other variable (a identification strategy for bad controls)**
 
 ## h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
+
 **Answer: If we remove "Has cell phone" variable, some of its coefficient/impact would show up in the "Any SMS message" variable. The coefficient of "Any SMS message" would go down as the impact would be distributed/diluted over subjects that have a phone and those that do not.**
 **Another way to explain the same is that the population that does not have a cell phone would not be effected by the SMS so would bring the estimated ATE/Coefficient down**
 
@@ -353,14 +365,14 @@ Staying with the same experiment, now lets think about multifactor experiments.
 
 ## d. In column (1) of Table 4B, which seems to have a stronger treatment effect, the recycling bin with message sticker, or the recycling bin without sticker?  How large is the magnitude of the estimated difference?
 
-**Answer: The "recycling bin with sticker" has a stronger treatment effec. The magnitude of the difference is (.055 - .035 = .025) .025**
+**Answer: The "recycling bin with sticker" has a stronger treatment effec. The magnitude of the difference is (.055 - .035 = .020) .020**
 **Both the coefficients have the same SE, so that does not influence the difference in magnitudes calculation**
 **A thing to note is that recycling bin "with sticker"" is significant at a 1% confidence level. "without sticker" is significant at 5% confidence level**
 
 ## e. Is this difference you just described statistically significant?  Explain which piece of information in the table allows you to answer this question.
 
-**Answer: The difference above (.025) is not statistically significant. The SE (.015) for both measurement helps us with this conclusion**
-**If the estimates err in opposite directions (-.015 in one case and +.015 in the other) there could be cases where the difference in the outcomes (.025 for the point estimates) would reduce to 0**
+**Answer: The difference above (.020) is not statistically significant. The SE (.015) for both measurement helps us with this conclusion**
+**If the estimates err in opposite directions (-.015 in one case and +.015 in the other) there could be cases where the difference in the outcomes (.020 for the point estimates) would reduce to 0**
 
 ## f. Notice that Table 4C is described as results from "fully saturated" models.  What does this mean?  Looking at the list of variables in the table, explain in what sense the model is "saturated."
 **Answer: The model is "saturated" as it includes all the independent variables and there interaction terms i.e. we measure the mean outcomes of all experimental conditions**
@@ -627,8 +639,8 @@ summary(lr_v2)
 
 ```
 
-**Answer: The coefficient/ATE is -0.16554(0.07567)**
-**The p-value is 7.684e-08**
+**Answer: TBD:The coefficient/ATE is -0.16554(0.07567)**
+**The p-value is .03113**
 
 ## c. Do you prefer the estimate of the ATE reported in part (a) or part (b)? Why?
 **Answer: I prefer the estimate in part (b). Its intuitive that patient's medical condition on day 14 would depend to some extent on there baseline condition on day 0. Leaving intuition aside, the analysis above shows that temperature on day 0 is statistically significant at a 5% confidence level. The coefficient of "temperature_day0" is .20 which is ~3 times the standard error of .07634**
@@ -641,11 +653,13 @@ lr_v3 = lm(vomiting_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0 + tem
 summary(lr_v3)
 ```
 **Answer: The ATE(SE) are -0.12010(0.07768).**
-**The p-value is 4.545e-08**
+**The p-value is .12541**
 
 ## e. Do you prefer the estimate of the ATE reported in part (b) or part (d)? Why?
 
 **Answer: I prefer the estimate in part(b). (d) adds temperature on day 14 as a covariate. This may be "bad control" as the "temperature on day 14" may be an effect of the treatment. The "temperature on day 14" might actually be impacted by both the treatment and the baseline variables (temperature and vomiting on day 0). Adding "temperature on day 14 as a covariate" adds noise to the causal relationship (that we are trying to measure) between the outcome and independent variables (medicine, baseline)**
+
+**TBD AIC.....confidence interval has also gone down**
 
 ## f. Now let's switch from the outcome of vomiting to the outcome of temperature, and use the same regression covariates as in part (b). Test the hypothesis that ZMapp is especially likely to reduce men's temperatures, as compared to women's, and describe how you did so. What do the results suggest?
 
