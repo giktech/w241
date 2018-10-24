@@ -195,8 +195,8 @@ coeftest(lr3, lr3$cluster.vcov)
 ```
 
 **Answer: The cluster confidence interval from study 1 and 2 combined is [-0.2085342 -0.1016123]**
-** The treatment effect is -0.1550732**
-** The p value is close to 0 (7.344e-09 with robust SE's and 2e-16 with OLS SE's)**
+**The treatment effect is -0.1550732**
+**The p value is close to 0 (7.344e-09 with robust SE's and 2e-16 with OLS SE's)**
 
 ### f. Now, repeat part (e) but include a dummy variable (a 0/1 binary variable) for whether the data are from Study 1 or Study 2. What is the treatment effect estimate and associated p-value?
 
@@ -233,7 +233,7 @@ coeftest(lr4, lr4$cluster.vcov)
 ```
 
 **Answer: The cluster confidence interval from all studies combined is [-0.04760609  0.03405559]**
-** The treatment effect is -0.006775249**
+**The treatment effect is -0.006775249**
 **The p value is .74 with robust SE's and .709 with OLS SE's**
 
 
@@ -254,6 +254,7 @@ coeftest(lr4, lr4$cluster.vcov)
 
 1. In the FB case study, the places where the ads ran were selected due to certain characteristics(Quote: "Targeting to reach people in two of the most populated counties in Florida, Dade and Broward, which have a combined population of 4.2 million"). We are not sure if these characteristics (like the population density or total population) were included as control while determining the effects of the treatment (ADS). If not included, the ATE claimed would be biased and will include noise due to these independent variables**
 2. In places where the ads ran, exposure was determined by certain characteristics (Political interest, education, work, search phrases etc) (Quote: "Not only were our display ads based on the results of the Facebook research, but a lot of our ads ran to people who we originally aggregated on a remarketing list through the Facebook acquisition campaign."). Again, its not clear if the study controlled for, blocked or clustered around these distinguishing factors. Different treatment of these variables would lead to different estimates for ATE**
+
 
 *** 
 
@@ -334,9 +335,10 @@ Staying with the same experiment, now lets think about multifactor experiments.
 
 ### a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
 
-**Answer: The experiment's design has the following factors:**   
-* Bin (3 levels: with sticker, without stickers, no bin)
-* Cell phone (2 levels: has, has not)
+**Answer: The experiment's design has the following factors:**
+
+1. Bin (3 levels: with sticker, without stickers, no bin)
+2. Cell phone (2 levels: has, has not)
   + SMS (3 levels: No message, generic message, specific message)
 
 **Answer: If we consider "has_cellphone" as a pre-treatment condition, the design is (3 * 3).**
@@ -376,12 +378,14 @@ Staying with the same experiment, now lets think about multifactor experiments.
 **Answer: The model is "saturated" as it includes all the independent variables and there interaction terms i.e. we measure the mean outcomes of all experimental conditions**
 
 **The complete list of experimental conditions are:**
+
 1. SMS message
 2. No Bin
 3. Bin without sticker
 4. Bin with Sticker
-5. Phone
-The equation for the model, gives us a coefficient for each of these conditions and there  interactions (like "SMS message + bin" and "SMS message + No Bin")
+5. Phone  
+
+*The equation for the model, gives us a coefficient for each of these conditions and there  interactions (like "SMS message + bin" and "SMS message + No Bin")*
 
 ***
 
@@ -397,23 +401,28 @@ head(d4)
 ```{r}
 # Summary
 summary(d4)
-```
+```  
+
 **Answer: "street" has some values that seem out of the normal range(-999). It may be that those that did not have any recordings for the street. Investigating further**
-**Summary shows that other variables have values within normal ranges for those variables**
+**Summary shows that other variables have values within normal ranges for those variables**  
+
 
 ```{r}
 # Looking closely at the street variable
 hist(d4$street)
 ```
-**So yes, just a couple of troubling values (-999) in "street". We can replace them with "NA"" to be consistent with rest of the document(there are other NA's for values that were not recorded)**  
+  
+**So yes, just a couple of troubling values (-999) in "street". We can replace them with "NA"" to be consistent with rest of the document(there are other NA's for values that were not recorded)**      
 
 
 ```{r}
 d4$street[d4$street == -999] <- NA
 hist(d4$street, main = "Distribution of Street after replacing -999's with NA")
 ```
+
 **The distribution of "Street" looks reasonable now**
-**The results of the regression do not dramatically change on fixing the input. We see a very slight lowering of SE in some of the regressions, especially the fully saturated model**
+**The results of the regression do not dramatically change on fixing the input. We see a very slight lowering of SE in some of the regressions, especially the fully saturated model**  
+
 
 ```{r}
 # Investigating the data some more
@@ -431,20 +440,22 @@ scatterplotMatrix( ~ avg_bins_treat + base_avg_bins_treat + street, data = d4, m
 ```{r}
 hist(d4$avg_bins_treat, main = "Distribution of the outcome: bins turned in after the treatment")
 ```
-**How was the baseline?**
+**How was the baseline?**  
+
 
 ```{r}
 hist(d4$base_avg_bins_treat, main = "Distribution of the baseline: bins turned in before the treatment")
 ```
-**Both distributions above are not normal. They are similar though and the sample size is big enough**
+**Both distributions above are not normal. They are similar though and the sample size is big enough**  
 
 **Curious about the distribution of "havecell"**
 ```{r}
 hist(d4$havecell, main = "Distribution of \"havecell\"")
 ```
-**This makes sense per the experiment's design. Folks that have a cell phone were further divided for the SMS treatment**
+**This makes sense per the experiment's design. Folks that have a cell phone were further divided for the SMS treatment**  
 
 *Enough with the exploration*
+
 ***
 
 ### a. For simplicity, let's start by measuring the effect of providing a recycling bin, ignoring the SMS message treatment (and ignoring whether there was a sticker on the bin or not).  Run a regression of Y on only the bin treatment dummy, so you estimate a simple difference in means.  Provide a 95% confidence interval for the treatment effect.
@@ -499,15 +510,15 @@ print('95% confidence interval')
 lr4c.confint["bin",]
 ```
 
-**Answer: The 95% confidence interval with the street effects is [0.08175545 0.15075034 ]**
+**Answer: The 95% confidence interval with the street effects is [0.08175545 0.15075034 ]**  
 
 ### d. Recall that the authors described their experiment as "stratified at the street level," which is a synonym for blocking by street.  Explain why the confidence interval with fixed effects does not differ much from the previous one.
 
-**Answer: The 2 intervals differ very little (<.01) as the effect of the street is partially captured by the baseline. Its  intuitive that certain neighborhoods may have higher inclination to recycle, which can be captured mostly in the preexperiment measurements (baseline)**
+**Answer: The 2 intervals differ very little (<.01) as the effect of the street is partially captured by the baseline. Its  intuitive that certain neighborhoods may have higher inclination to recycle, which can be captured mostly in the preexperiment measurements (baseline)**  
 
 ### e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
 
-**Answer: R implementation is below:**
+**Answer: R implementation is below:**  
 ```{r}
 # Add the column "no_cell" to the data
 d4$no_cell = 1-d4$havecell
@@ -550,10 +561,15 @@ lr4f.summary$coefficients["bin:no_cell",]
 print('95% confidence interval')
 lr4f.confint["bin",]
 ```
-**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.0826730 0.1516659] without the interaction term**
-**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08046617 0.17037576] with the interaction term**
-**The confidence interval almost matches the previous one as having a cell phone (or not) does not explain any of the variance in the primary treatment effect (bin). The variables are not correlated. The correlation charts and the coefficient for the interation term (-0.01996593  (0.03554587)) show the same**
-**Answer: Per the experiment's design, "hascell" is a pre-treatment condition used to identify the group that was further divided for the SMS treatments. "hascell" was not considered as one of the independent variables having an effect on the outcome. With that being true, we were not measuring or expecting it to have an impact on the outcome**
+**Answer:**  
+
+1. The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.0826730 0.1516659] without the interaction term
+2. The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08046617 0.17037576] with the interaction term  
+
+**The confidence interval almost matches the previous one as having a cell phone (or not) does not explain any of the variance in the primary treatment effect (bin). The variables are not correlated. The correlation charts and the coefficient for the interation term (-0.01996593  (0.03554587)) show the same**  
+
+**Answer: Per the experiment's design, "hascell" is a pre-treatment condition used to identify the group that was further divided for the SMS treatments. "hascell" was not considered as one of the independent variables having an effect on the outcome. With that being true, we were not measuring or expecting it to have an impact on the outcome**    
+
 
 ```{r}
 # lr4f.summary$coefficients
@@ -735,10 +751,12 @@ summary(lr_v5)
 
 ### i. Another colleague proposes that being of African descent causes one to be more likely to get Ebola. He asks you what ideal experiment would answer this question. What would you tell him?  (*Hint: refer to Chapter 1 of Mostly Harmless Econometrics.*)
 
-**Answer: This may be one of the FUQ's (defined in MHE chapter 1). It is impossible to come up with a practical experiment that can answer this question.**
-**If we start with randomly chosen people and observe them for Ebola, we can create a record for who gets it. If the group can be divided into those of African descent and those not, we'll be able to observe if the there's more Ebola in one group over the other. Even if we find that more from Aftrican descent get Ebola in our study, we'll not be able to establish a causal relationship due to multiple reasons:**
+**Answer: This may be one of the FUQ's (defined in MHE chapter 1). It is impossible to come up with a practical experiment that can answer this question.**  
+
+**If we start with randomly chosen people and observe them for Ebola, we can create a record for who gets it. If the group can be divided into those of African descent and those not, we'll be able to observe if the there's more Ebola in one group over the other. Even if we find that more from Aftrican descent get Ebola in our study, we'll not be able to establish a causal relationship due to multiple reasons:**  
+
 1. There's no precise intervention which'll help us do an experiment to establish cause
-2. There are too many confounding factors (Conditions at birth, Time spent in Africa, African parents but born outside......) that are difficult to control for
+2. There are too many confounding factors (Conditions at birth, Time spent in Africa, African parents but born outside......) that are difficult to control for.  
 
 **The answer to this question does not really help also. One cannot change one's descent. The answer could help spark further investigation though i.e. there could be more precise questions on why a subgroup (of the population) is more prone to EBOLA**
 
