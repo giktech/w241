@@ -318,12 +318,13 @@ lr_2d.diff
 
 ### g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
 
-**Answer: No, "has cell phone" is not bad control. It is not an outcome of the treatment.**
-**From the regression it looks fairly inconsequential (coefficient is .022(.014)). It may be capturing some of the variance and effect that would otherwise show up in  "Any SMS message" variable (SMS would have no impact if you do not have a cell phone. That commonsense observation is also mathematically captured by this variable).**
+**Answer: Per the expriment's design, "hascell" was used to identify the group that can be further subdivided for the SMS treatment. It was not meant to be a control or an independent variable of consequence. Since it was used for subdivision, additing it as control seems counterintuitive and maybe bad control**
+**From regression, the effect of "hascell" looks inconsequential (coefficient is .022(.014)) also**
 
 ### h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
 
-**Answer: The coefficient of "Any SMS message" would go up if we remove "has cell phone" form the regression. 4A shows a positive impact of both an sms message and having a cell phone. In absence of the "has cell phone" variable, its impact would be mostly captured by the "sms" variable, driving up its magnitude.**
+**Answer: The coefficient of "Any SMS message" would go up if we remove "has cell phone" form the regression.**
+**"hascell" was used to identify folks (with cellphone) that can be randomized for the 3 SMS treatments. Using it again as a control adds noise and probably takes some of the effect that'll otherwise show up for the SMS treatments**
 
 
 ***
@@ -334,15 +335,13 @@ Staying with the same experiment, now lets think about multifactor experiments.
 ### a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
 
 **Answer: The experiment's design has the following factors:**   
-1. Bin (3 levels: with sticker, without stickers, no bin)
-2. SMS (3 levels: No message, generic message, specific message)
-3. Cell phone (2 levels: has, has not)  
-**Answer: The dimensions could be written as 3 * 3 * 2**
+* Bin (3 levels: with sticker, without stickers, no bin)
+* Cell phone (2 levels: has, has not)
+  + SMS (3 levels: No message, generic message, specific message)
 
-*The following were also consequential for the experiment:*
-1. Baselines for each of the dependent variable
-2. Street information
-
+**Answer: If we consider "has_cellphone" as a pre-treatment condition, the design is (3 * 3).**
+*We can consider "has_cellphone" as pre-treatment condition as it is used to identify the group that be further subdivided for the 3 SMS treatments*
+**Table 4A has more combinations than 3*3 though. It has (3*2*3 - 3) combinations. That is combinations of bin(3), SMS(3) and cellphone(2) - combinations of SMS with "no cell phone", which do not make sense anyway**
 
 ### b. In the results of Table 4B, describe the baseline category. That is, in English, how would you describe the attributes of the group of people for whom all dummy variables are equal to zero?
 
@@ -406,14 +405,15 @@ summary(d4)
 # Looking closely at the street variable
 hist(d4$street)
 ```
-**So yes, just a couple of troubling values (-999) in "street". We can replace them with NA**
+**So yes, just a couple of troubling values (-999) in "street". We can replace them with "NA"" to be consistent with rest of the document(there are other NA's for values that were not recorded)**  
+
 
 ```{r}
 d4$street[d4$street == -999] <- NA
-hist(d4$street)
+hist(d4$street, main = "Distribution of Street after replacing -999's with NA")
 ```
-*Good distribution among the streets now*
-
+**The distribution of "Street" looks reasonable now**
+**The results of the regression do not dramatically change on fixing the input. We see a very slight lowering of SE in some of the regressions, especially the fully saturated model**
 
 ```{r}
 # Investigating the data some more
@@ -424,8 +424,28 @@ hist(d4$street)
 # Investigating with a  less crowded matrix
 scatterplotMatrix( ~ avg_bins_treat + base_avg_bins_treat + street, data = d4, main = "Scatterplot Matrix for key variables")
 ```
-*There's correlation between baseline and the treatment effect. The "Street" has almost the same relationship with the baseline and treatment effect. This is intuitive*
+**There's correlation between baseline and the treatment effect. The "Street" has almost the same relationship with the baseline and treatment effect. This is intuitive**
 
+**Next, investigating the distribution of the main outcome variable**
+
+```{r}
+hist(d4$avg_bins_treat, main = "Distribution of the outcome: bins turned in after the treatment")
+```
+**How was the baseline?**
+
+```{r}
+hist(d4$base_avg_bins_treat, main = "Distribution of the baseline: bins turned in before the treatment")
+```
+**Both distributions above are not normal. They are similar though and the sample size is big enough**
+
+**Curious about the distribution of "havecell"**
+```{r}
+hist(d4$havecell, main = "Distribution of \"havecell\"")
+```
+**This makes sense per the experiment's design. Folks that have a cell phone were further divided for the SMS treatment**
+
+*Enough with the exploration*
+***
 
 ### a. For simplicity, let's start by measuring the effect of providing a recycling bin, ignoring the SMS message treatment (and ignoring whether there was a sticker on the bin or not).  Run a regression of Y on only the bin treatment dummy, so you estimate a simple difference in means.  Provide a 95% confidence interval for the treatment effect.
 
@@ -487,6 +507,7 @@ lr4c.confint["bin",]
 
 ### e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
 
+**Answer: R implementation is below:**
 ```{r}
 # Add the column "no_cell" to the data
 d4$no_cell = 1-d4$havecell
@@ -532,6 +553,7 @@ lr4f.confint["bin",]
 **Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.0826730 0.1516659] without the interaction term**
 **Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08046617 0.17037576] with the interaction term**
 **The confidence interval almost matches the previous one as having a cell phone (or not) does not explain any of the variance in the primary treatment effect (bin). The variables are not correlated. The correlation charts and the coefficient for the interation term (-0.01996593  (0.03554587)) show the same**
+**Answer: Per the experiment's design, "hascell" is a pre-treatment condition used to identify the group that was further divided for the SMS treatments. "hascell" was not considered as one of the independent variables having an effect on the outcome. With that being true, we were not measuring or expecting it to have an impact on the outcome**
 
 ```{r}
 # lr4f.summary$coefficients
