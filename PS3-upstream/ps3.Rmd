@@ -78,7 +78,7 @@ summary(d1)
 
 ```
 
-## a. Using regression without clustered standard errors (that is, ignoring the clustered assignment), compute a confidence interval for the effect of the ad on candidate name recognition in Study 1 only (the dependent variable is "name_recall"). 
+### a. Using regression without clustered standard errors (that is, ignoring the clustered assignment), compute a confidence interval for the effect of the ad on candidate name recognition in Study 1 only (the dependent variable is "name_recall"). 
 + **Note**: Ignore the blocking the article mentions throughout this problem.
 + **Note**: You will estimate something different than is reported in the study. 
 
@@ -113,13 +113,14 @@ lr1$ols.confint
 # lr1$ols.confint
 
 ```
-**Answer: The confidence interval is: treat_ad  -0.05101765 0.03142188**
+**Answer: The confidence interval is: treat_ad  [-0.05101765 0.03142188]**
 
-## b. What are the clusters in Broockman and Green's study? Why might taking clustering into account increase the standard errors?
-**Answer: Clusters in the study are composed of similar individuals: with the same age, gender and location**
-**The members of above clusters have very little variance in study relevant attributes: age, gender, location but there's significant variance between the clusters. When assigned as a group, this assignment suppresses the variance in Y leading to a smaller estimate for errors. When we take clustering into account, we correct for this, leading to bigger SE's.**
+### b. What are the clusters in Broockman and Green's study? Why might taking clustering into account increase the standard errors?
 
-## c. Now repeat part (a), but taking clustering into account. That is, compute a confidence interval for the effect of the ad on candidate name recognition in Study 1, but now correctly accounting for the clustered nature of the treatment assignment. If you're not familiar with how to calculate these clustered and robust estimates, there is a demo worksheet that is available in our course repository: `./code/week5clusterAndRobust.Rmd`.
+**Answer: Clusters in the study are composed of similar individuals (same age, gender and location)**
+**The members of above clusters have very little variance among themselves (age, gender, location) but there's significant variance between the clusters. When the subjects are assigned as clusters, it suppresses the variance in the outcome(y) leading to a smaller estimate for errors. When we take clustering into account, we correct for this, leading to bigger SE's.**
+
+### c. Now repeat part (a), but taking clustering into account. That is, compute a confidence interval for the effect of the ad on candidate name recognition in Study 1, but now correctly accounting for the clustered nature of the treatment assignment. If you're not familiar with how to calculate these clustered and robust estimates, there is a demo worksheet that is available in our course repository: `./code/week5clusterAndRobust.Rmd`.
 ```{r}
 # Cluster standard error and  confidence interval
 # Calculated in the function above
@@ -128,10 +129,8 @@ lr1$cluster.se
 print('Cluster Confidence interval')
 lr1$cluster.confint
 ```
-**Answer: The confidence interval based on Cluster standard errors is:**
+**Answer: The confidence interval based on Cluster standard errors is [-0.05730514  0.03770936]**
 
-**treat_ad    treat_ad**
-**-0.05730514  0.03770936**
 
 
 ```{r}
@@ -141,7 +140,7 @@ stargazer(lr1, lr1,
 ```
 
 
-## d. Repeat part (c), but now for Study 2 only.
+### d. Repeat part (c), but now for Study 2 only.
 
 ```{r} 
 # Separating out study 2
@@ -167,9 +166,9 @@ lr2$cluster.se
 print('Cluster Confidence interval')
 lr2$cluster.confint
 ```
-**Answer: The cluster confidence interval from study 2 is -0.07381003  0.06820333**
+**Answer: The cluster confidence interval from study 2 is [-0.07381003  0.06820333]**
 
-## e. Repeat part (c), but using the entire sample from both studies. Do not take into account which study the data is from (more on this in a moment), but just pool the data and run one omnibus regression. What is the treatment effect estimate and associated p-value?
+### e. Repeat part (c), but using the entire sample from both studies. Do not take into account which study the data is from (more on this in a moment), but just pool the data and run one omnibus regression. What is the treatment effect estimate and associated p-value?
 
 ```{r}
 # Linear regression on the entire sample
@@ -195,11 +194,11 @@ print('p-value')
 coeftest(lr3, lr3$cluster.vcov)
 ```
 
-**Answer: The cluster confidence interval from all studies combined is -0.2085342 -0.1016123**
+**Answer: The cluster confidence interval from study 1 and 2 combined is [-0.2085342 -0.1016123]**
 ** The treatment effect is -0.1550732**
-** The p value is close to 0 (7.344e-09)**
+** The p value is close to 0 (7.344e-09 with robust SE's and 2e-16 with OLS SE's)**
 
-## f. Now, repeat part (e) but include a dummy variable (a 0/1 binary variable) for whether the data are from Study 1 or Study 2. What is the treatment effect estimate and associated p-value?
+### f. Now, repeat part (e) but include a dummy variable (a 0/1 binary variable) for whether the data are from Study 1 or Study 2. What is the treatment effect estimate and associated p-value?
 
 ```{r}
 # including a dummy variable for data in study 1 or 2
@@ -235,40 +234,47 @@ coeftest(lr4, lr4$cluster.vcov)
 
 **Answer: The cluster confidence interval from all studies combined is [-0.04760609  0.03405559]**
 ** The treatment effect is -0.006775249**
-**The p value is .74**
+**The p value is .74 with robust SE's and .709 with OLS SE's**
 
 
-## g. Why did the results from parts (e) and (f) differ? Which result is biased, and why? (Hint: see pages 75-76 of Gerber and Green, with more detailed discussion optionally available on pages 116-121.)
-**Answer: The number of observations in study 1 & 2 is about the same, so we can assume that the probability of assigment to each group is the same. The treatment effect (and the confidence intervals) are different among the 2 studies though, introducing a bias when we mix the observations from the studies (i.e. (e) is biased.(f) captures the impact of the studies in the coefficient of the dummy variable. This creates a better estimate of the treatment impact in (f)**
+### g. Why did the results from parts (e) and (f) differ? Which result is biased, and why? (Hint: see pages 75-76 of Gerber and Green, with more detailed discussion optionally available on pages 116-121.)
 
-## h. Skim this [Facebook case study](https://www.facebook.com/notes/us-politics-on-facebook/case-study-reaching-voters-with-facebook-ads-vote-no-on-8/10150257619200882) and consider two claims they make reprinted below. Why might their results differ from Broockman and Green's? Please be specific and provide examples.
+*CI of treatment effect from study 1 [-0.05101765 0.03142188]*
+*CI of treatment effect from study 2 [-0.07381003  0.06820333]*
+
+**Answer:  The confidence intervals, of the treatment effect, differ among the studies. The CI for study 2 is almost double the width of study 1. This indicates a meaningful difference in either the composition/baseline or context/environment/treatment of the subjects in each of the studies, which introduces a bias when we combine the studies.**
+**(e) is biased as it combines the studies.(f) captures the variability among the studies in the coefficient of the dummy variable. This creates a more accurate estimate of the treatment impact**
+
+### h. Skim this [Facebook case study](https://www.facebook.com/notes/us-politics-on-facebook/case-study-reaching-voters-with-facebook-ads-vote-no-on-8/10150257619200882) and consider two claims they make reprinted below. Why might their results differ from Broockman and Green's? Please be specific and provide examples.
 
   + "There was a 19 percent difference in the way people voted in areas where Facebook Ads ran versus areas where the ads did not run."
   + "In the areas where the ads ran, people with the most online ad exposure were 17 percent more likely to vote against the proposition than those with the least."
   
 **Answer: The claims would differ due to the following reasons:**
-**1> The places where the ads ran were selected due to certain characteristics(Quote: "Targeting to reach people in two of the most populated counties in Florida, Dade and Broward, which have a combined population of 4.2 million"). We are not sure if these characteristics (like the population density or total population) we included as control while determining the effects of the treatment (ADS). If not included, the ATE claimed would be biased and included some of the noise due to these factors**
-**2> In places where the ads ran, exposure was determined by selection characteristics by FB (Political interest, education, work, search phrases etc) (Quote: "Not only were our display ads based on the results of the Facebook research, but a lot of our ads ran to people who we originally aggregated on a remarketing list through the Facebook acquisition campaign."). Again, its not clear if the study controlled for, blocked or clustered around these distinguishing factors. Different treatment of these variables would lead to different estimates for ATE**
+
+1. In the FB case study, the places where the ads ran were selected due to certain characteristics(Quote: "Targeting to reach people in two of the most populated counties in Florida, Dade and Broward, which have a combined population of 4.2 million"). We are not sure if these characteristics (like the population density or total population) were included as control while determining the effects of the treatment (ADS). If not included, the ATE claimed would be biased and will include noise due to these independent variables**
+2. In places where the ads ran, exposure was determined by certain characteristics (Political interest, education, work, search phrases etc) (Quote: "Not only were our display ads based on the results of the Facebook research, but a lot of our ads ran to people who we originally aggregated on a remarketing list through the Facebook acquisition campaign."). Again, its not clear if the study controlled for, blocked or clustered around these distinguishing factors. Different treatment of these variables would lead to different estimates for ATE**
 
 *** 
+
 # 2 Peruvian Recycling 
 
 Look at [this article](https://drive.google.com/file/d/0BxwM1dZBYvxBVzQtQW9nbmd2NGM/view?usp=sharing) about encouraging recycling in Peru.  The paper contains two experiments, a "participation study" and a "participation intensity study."  In this problem, we will focus on the latter study, whose results are contained in Table 4 in this problem.  You will need to read the relevant section of the paper (starting on page 20 of the manuscript) in order to understand the experimental design and variables.  (*Note that "indicator variable" is a synonym for "dummy variable," in case you haven't seen this language before.*)
 
-## a. In Column 3 of Table 4A, what is the estimated ATE of providing a recycling bin on the average weight of recyclables turned in per household per week, during the six-week treatment period?  Provide a 95% confidence interval.
+### a. In Column 3 of Table 4A, what is the estimated ATE of providing a recycling bin on the average weight of recyclables turned in per household per week, during the six-week treatment period?  Provide a 95% confidence interval.
 ```{r}
 # Coefficient/ATE of providing a recycling bin on the average weight of recyclables
 lr_2a.coeff = .187
 lr_2a.coeff
 se_2a = .032
 se_2a
-# Confidence interval is +1 2 SE's
+# Confidence interval 
 c(lr_2a.coeff - 2 * se_2a, lr_2a.coeff + 2* se_2a)
 ```
 **Answer: The ATE is .187**
 **The 95% confidence interval is [.123, .251]**
 
-## b. In Column 3 of Table 4A, what is the estimated ATE of sending a text message reminder on the average weight of recyclables turned in per household per week?  Provide a 95% confidence interval.
+### b. In Column 3 of Table 4A, what is the estimated ATE of sending a text message reminder on the average weight of recyclables turned in per household per week?  Provide a 95% confidence interval.
 ```{r}
 # Coefficient/ATE
 lr_2b.coeff = -.024
@@ -281,7 +287,8 @@ c(lr_2b.coeff - 2 * se_2b, lr_2b.coeff + 2* se_2b)
 **Answer: The ATE is -.024**
 **The 95% confidence interval is [-.102, .054]**
 
-## c. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of providing a recycling bin?
+### c. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of providing a recycling bin?
+
 **Answer: The following outcome measures show statististically significant effects:**
 1. Percentage of visits turned in bag
 2. Avg. no. of bins turned in per week
@@ -289,10 +296,11 @@ c(lr_2b.coeff - 2 * se_2b, lr_2b.coeff + 2* se_2b)
 4. Avg. market value per week
 
 
-##d. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of sending text messages?
+### d. Which outcome measures in Table 4A show statistically significant effects (at the 5% level) of sending text messages?
+
 **Answer: No statistically significant effects (at 5% level)**
 
-## e. Suppose that, during the two weeks before treatment, household A turns in 2kg per week more recyclables than household B does, and suppose that both households are otherwise identical (including being in the same treatment group).  From the model, how much more recycling do we predict household A to have than household B, per week, during the six weeks of treatment?   Provide only a point estimate, as the confidence interval would be a bit complicated.  This question is designed to test your understanding of slope coefficients in regression.
+### e. Suppose that, during the two weeks before treatment, household A turns in 2kg per week more recyclables than household B does, and suppose that both households are otherwise identical (including being in the same treatment group).  From the model, how much more recycling do we predict household A to have than household B, per week, during the six weeks of treatment?   Provide only a point estimate, as the confidence interval would be a bit complicated.  This question is designed to test your understanding of slope coefficients in regression.
 ```{r}
 # The difference in this outcome comes from the baseline weight difference
 lr_2d.coeff = .281
@@ -300,22 +308,22 @@ lr_2d.baseline = 2
 lr_2d.diff = lr_2d.coeff * lr_2d.baseline
 lr_2d.diff
 ```
-**Answer: The difference in outcome among A and B (weight turned in) comes from the different baseline (2Kg) in this case. A would turn in 0.562kg more recyclables/week in the treatment period**
+**Answer: The difference in outcome among A and B (weight turned in) comes from the different baselines (2Kg). A would turn in 0.562kg more recyclables/week in the treatment period**
 
-## f. Suppose that the variable "percentage of visits turned in bag, baseline" had been left out of the regression reported in Column 1.  What would you expect to happen to the results on providing a recycling bin?  Would you expect an increase or decrease in the estimated ATE?  Would you expect an increase or decrease in the standard error?  Explain your reasoning.
+### f. Suppose that the variable "percentage of visits turned in bag, baseline" had been left out of the regression reported in Column 1.  What would you expect to happen to the results on providing a recycling bin?  Would you expect an increase or decrease in the estimated ATE?  Would you expect an increase or decrease in the standard error?  Explain your reasoning.
 
-**Answer: if the variable "percentage of visits turned in bag, baseline" had been left out of the regression, we'll observe some if its effect to creep into the results of "providing a recycling bin". More precisely we may observe the following:**
-1. An overestimate of the ATE of providing a recycling bin i.e. the estimated ATE of providing the bin would go up. "Visits in a bag" has a +ve impact on recycling and in the absense of the variable, some of that effect would should be in "providing the bin" treatment
+**Answer: if the variable "percentage of visits turned in bag, baseline" was left out of the regression, we'll observe some if its effect to creep into the results of "providing a recycling bin". More precisely we may observe the following:**
+1. An overestimate of the ATE of providing a recycling bin i.e. the estimated ATE of providing the bin would go up. "Visits in a bag" has a +ve impact on recycling and in the absense of the variable, some of that effect would show up in "providing the bin" treatment
 2. We'll observe an increase in the Standard Error. Some of the variance related to the basline of bags turned in would show up in results of "providing a recyling bin"
 
-## g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
+### g. In column 1 of Table 4A, would you say the variable "has cell phone" is a bad control?  Explain your reasoning.
 
-**Answer: No, "has cell phone" is not bad control. It brings out some of the variance and effect that would otherwise show up in the "Any SMS message" variable so serves a useful purpose (SMS would have not impact if you do not have a cell phone. That commonsense observation is mathematically captured by this variable). It is not an outcome of any other variable (a identification strategy for bad controls)**
+**Answer: No, "has cell phone" is not bad control. It is not an outcome of the treatment.**
+**From the regression it looks fairly inconsequential (coefficient is .022(.014)). It may be capturing some of the variance and effect that would otherwise show up in  "Any SMS message" variable (SMS would have no impact if you do not have a cell phone. That commonsense observation is also mathematically captured by this variable).**
 
-## h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
+### h. If we were to remove the "has cell phone" variable from the regression, what would you expect to happen to the coefficient on "Any SMS message"?  Would it go up or down? Explain your reasoning.
 
-**Answer: If we remove "Has cell phone" variable, some of its coefficient/impact would show up in the "Any SMS message" variable. The coefficient of "Any SMS message" would go down as the impact would be distributed/diluted over subjects that have a phone and those that do not.**
-**Another way to explain the same is that the population that does not have a cell phone would not be effected by the SMS so would bring the estimated ATE/Coefficient down**
+**Answer: The coefficient of "Any SMS message" would go up if we remove "has cell phone" form the regression. 4A shows a positive impact of both an sms message and having a cell phone. In absence of the "has cell phone" variable, its impact would be mostly captured by the "sms" variable, driving up its magnitude.**
 
 
 ***
@@ -323,32 +331,22 @@ lr_2d.diff
 # 3 Multifactor Experiments 
 Staying with the same experiment, now lets think about multifactor experiments. 
 
-## a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
+### a. What is the full experimental design for this experiment?  Tell us the dimensions, such as 2x2x3.  (Hint: the full results appear in Panel 4B.)
 
-** Answer: TBD The experiment's design has the following:** 
+**Answer: The experiment's design has the following factors:**   
+1. Bin (3 levels: with sticker, without stickers, no bin)
+2. SMS (3 levels: No message, generic message, specific message)
+3. Cell phone (2 levels: has, has not)  
+**Answer: The dimensions could be written as 3 * 3 * 2**
 
-1. 5 Dependent variables:
-  + % of visits turned in bag
-  + No. of bins turned in per week
-  + Weight or recyclables turned in
-  + Market value of recyclables turned in
-  + % contamination per week
-2. 4 Independent variables:
-  + Bin with sticker -  indicator
-  + Bin without sticker - indicator
-  + SMS message - indicator
-  + Has cell phone - indicator
-3. 5 Baseline (as independent variables) variables measured pre-treatment (2 weeks before experiment). These are included in the regression equation for individual outcomes (like baseline for "visits with bags" is included when measuring this outcome):
-  + baseline for visits with bag
-  + baseline of bins turned in
-  + baseline of weight of recyclables
-  + baseline for the market value of recyclables
-  + baseline of % contamination per week
-4. Street fixed effects are included in the complete equation as the randomization was blocked by street.
+*The following were also consequential for the experiment:*
+1. Baselines for each of the dependent variable
+2. Street information
 
-## b. In the results of Table 4B, describe the baseline category. That is, in English, how would you describe the attributes of the group of people for whom all dummy variables are equal to zero?
 
-**Answer: "baseline" is a set of variables that capture the pre-experiment values (2 weeks before the expriment) of all the outcome variables. As the experimental treatments are not applied yet, all the dummy/indicator variables are 0. These are significant (theoratically and also via experiment's results) as can explain some of the effects seen in the outcome variables during the experiment**
+### b. In the results of Table 4B, describe the baseline category. That is, in English, how would you describe the attributes of the group of people for whom all dummy variables are equal to zero?
+
+**Answer: "baseline" is a set of variables that capture the pre-experiment values (2 weeks before the expriment) of all the outcome variables. As the experimental treatments are not applied yet, all the dummy/indicator variables are 0 for this time period. The baseline variables are significant (theoratically and also via experiment's results) as can explain some of the effects seen in the outcome variables during the experiment**
 
 * Below are the 5 Baseline (as independent variables) variables measured pre-treatment (2 weeks before experiment). These are included in the regression equation for individual outcomes (like baseline for "visits with bags" is included when measuring this outcome):
   + baseline for visits with bag
@@ -357,32 +355,36 @@ Staying with the same experiment, now lets think about multifactor experiments.
   + baseline for the market value of recyclables
   + baseline of % contamination per week
 
-## c. In column (1) of Table 4B, interpret the magnitude of the coefficient on "bin without sticker."  What does it mean?
+### c. In column (1) of Table 4B, interpret the magnitude of the coefficient on "bin without sticker."  What does it mean?
 
-**Answer: The coefficient is .035 with a SE of .015. The value is more than 2SE. Its marked as statistically significant at the 5% confidence level.**
+**Answer: The coefficient is .035(.015). The value is more than 2 * SE. Its marked as statistically significant at the 5% confidence level.**
 **The 95% Confidence interval based on these values would be [.005, .055]**
-**The interpretation would be that a bin (even a generic one without a sticker) creates a positive impact on recycling (education and lowering of the barrier). some of this impact shows up in visits that are not using the bin also. The impact is not huge (The ATE is one SE bigger than the baseline), but is measurable (The 95% confidence interval is +ve [.005, .055])**
+**The interpretation would be that a bin (even a generic one without a sticker) creates a positive impact on recycling (education and lowering of the barrier to recycling). some of this impact shows up in visits that are not using the bin also. Its impact on recycling without the bin is not huge (The ATE is one SE bigger than the baseline), but is measurable (The 95% confidence interval is +ve [.005, .055])**
 
-## d. In column (1) of Table 4B, which seems to have a stronger treatment effect, the recycling bin with message sticker, or the recycling bin without sticker?  How large is the magnitude of the estimated difference?
+### d. In column (1) of Table 4B, which seems to have a stronger treatment effect, the recycling bin with message sticker, or the recycling bin without sticker?  How large is the magnitude of the estimated difference?
 
-**Answer: The "recycling bin with sticker" has a stronger treatment effec. The magnitude of the difference is (.055 - .035 = .020) .020**
+**Answer: The "recycling bin with sticker" has a stronger treatment effect. The magnitude of the difference is (.055 - .035 = .020) .020**
 **Both the coefficients have the same SE, so that does not influence the difference in magnitudes calculation**
 **A thing to note is that recycling bin "with sticker"" is significant at a 1% confidence level. "without sticker" is significant at 5% confidence level**
 
-## e. Is this difference you just described statistically significant?  Explain which piece of information in the table allows you to answer this question.
+### e. Is this difference you just described statistically significant?  Explain which piece of information in the table allows you to answer this question.
 
 **Answer: The difference above (.020) is not statistically significant. The SE (.015) for both measurement helps us with this conclusion**
-**If the estimates err in opposite directions (-.015 in one case and +.015 in the other) there could be cases where the difference in the outcomes (.020 for the point estimates) would reduce to 0**
+**If the estimates err in opposite directions (-.015 in one case and +.015 in the other) there could be cases where the difference in the outcomes (.020 for the point estimates) would reduce to 0 or change signs**
 
-## f. Notice that Table 4C is described as results from "fully saturated" models.  What does this mean?  Looking at the list of variables in the table, explain in what sense the model is "saturated."
+### f. Notice that Table 4C is described as results from "fully saturated" models.  What does this mean?  Looking at the list of variables in the table, explain in what sense the model is "saturated."
+
 **Answer: The model is "saturated" as it includes all the independent variables and there interaction terms i.e. we measure the mean outcomes of all experimental conditions**
-**The experimental conditions are:**
+
+**The complete list of experimental conditions are:**
 1. SMS message
 2. No Bin
 3. Bin without sticker
 4. Bin with Sticker
 5. Phone
 The equation for the model, gives us a coefficient for each of these conditions and there  interactions (like "SMS message + bin" and "SMS message + No Bin")
+
+***
 
 # 4 Now! Do it with data 
 Download the data set for the recycling study in the previous problem, obtained from the authors. We'll be focusing on the outcome variable Y="number of bins turned in per week" (avg_bins_treat).
@@ -397,8 +399,20 @@ head(d4)
 # Summary
 summary(d4)
 ```
-*Answer: "street" has some values that seem out of the normal range(-999). It may be that those that did not have any recordings for the street. Investigating further*
-*Summary shows that other variables have values within normal ranges for those variables*
+**Answer: "street" has some values that seem out of the normal range(-999). It may be that those that did not have any recordings for the street. Investigating further**
+**Summary shows that other variables have values within normal ranges for those variables**
+
+```{r}
+# Looking closely at the street variable
+hist(d4$street)
+```
+**So yes, just a couple of troubling values (-999) in "street". We can replace them with NA**
+
+```{r}
+d4$street[d4$street == -999] <- NA
+hist(d4$street)
+```
+*Good distribution among the streets now*
 
 
 ```{r}
@@ -410,10 +424,10 @@ summary(d4)
 # Investigating with a  less crowded matrix
 scatterplotMatrix( ~ avg_bins_treat + base_avg_bins_treat + street, data = d4, main = "Scatterplot Matrix for key variables")
 ```
+*There's correlation between baseline and the treatment effect. The "Street" has almost the same relationship with the baseline and treatment effect. This is intuitive*
 
 
-
-## a. For simplicity, let's start by measuring the effect of providing a recycling bin, ignoring the SMS message treatment (and ignoring whether there was a sticker on the bin or not).  Run a regression of Y on only the bin treatment dummy, so you estimate a simple difference in means.  Provide a 95% confidence interval for the treatment effect.
+### a. For simplicity, let's start by measuring the effect of providing a recycling bin, ignoring the SMS message treatment (and ignoring whether there was a sticker on the bin or not).  Run a regression of Y on only the bin treatment dummy, so you estimate a simple difference in means.  Provide a 95% confidence interval for the treatment effect.
 
 ```{r}
 # Effect of providing a recycling bin
@@ -426,9 +440,9 @@ lr4a.confint
 ```
 
 **Answer: The ATE/Coefficient of bins is: 0.13538 (0.02029)**
-**95% confidence interval is: 0.09558421 0.1751758**
+**95% confidence interval is: [0.09558421 0.1751758]**
 
-## b. Now add the pre-treatment value of Y as a covariate.  Provide a 95% confidence interval for the treatment effect.  Explain how and why this confidence interval differs from the previous one.
+### b. Now add the pre-treatment value of Y as a covariate.  Provide a 95% confidence interval for the treatment effect.  Explain how and why this confidence interval differs from the previous one.
 
 ```{r}
 # Adding pre-treatment value of Y as a covariate
@@ -441,10 +455,10 @@ lr4b.confint
 ```
 
 **Answer: The ATE/Coefficient of bins is: 0.12469 (0.01667)**
-**95% confidence interval is: 0.09200378 0.1573822**
-**The confidence interval shrinks/becomes more precise when we add the baseline as a covariant. This is because some of the variance in the outcome is explained by the baseline (measurement prior to the experiment)
+**95% confidence interval is: [0.09200378 0.1573822]**
+**The confidence interval shrinks/becomes more precise when we add the baseline as a covariant. This is because some of the variance in the outcome is explained by the baseline (measurement prior to the experiment)**
 
-## c. Now add the street fixed effects.  (You'll need to use the R command factor().) Provide a 95% confidence interval for the treatment effect.  
+### c. Now add the street fixed effects.  (You'll need to use the R command factor().) Provide a 95% confidence interval for the treatment effect.  
 
 ```{r}
 # adding the street fixed effects
@@ -456,7 +470,7 @@ is.factor(d4$streetF)
 ```
 ```{r}
 # Adding the street fixed effects into the regression
-# TBD: Do we not need an interaction term? 
+# Do we not need an interaction term? They may be already captured in the variable.
 lr4c = lm(avg_bins_treat ~ bin + base_avg_bins_treat + streetF, data = d4)
 lr4c.summary = summary(lr4c)
 lr4c.summary$coefficients["bin",]
@@ -465,13 +479,13 @@ print('95% confidence interval')
 lr4c.confint["bin",]
 ```
 
-**Answer: The 95% confidence interval with the street effects is [0.08042873 0.14734483 ]**
+**Answer: The 95% confidence interval with the street effects is [0.08175545 0.15075034 ]**
 
-## d. Recall that the authors described their experiment as "stratified at the street level," which is a synonym for blocking by street.  Explain why the confidence interval with fixed effects does not differ much from the previous one.
+### d. Recall that the authors described their experiment as "stratified at the street level," which is a synonym for blocking by street.  Explain why the confidence interval with fixed effects does not differ much from the previous one.
 
 **Answer: The 2 intervals differ very little (<.01) as the effect of the street is partially captured by the baseline. Its  intuitive that certain neighborhoods may have higher inclination to recycle, which can be captured mostly in the preexperiment measurements (baseline)**
 
-## e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
+### e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
 
 ```{r}
 # Add the column "no_cell" to the data
@@ -480,7 +494,7 @@ head(d4)
 
 ```
 
-## f. Now add "no cell phone" as a covariate to the previous regression.  Provide a 95% confidence interval for the treatment effect.  Explain why this confidence interval does not differ much from the previous one.
+### f. Now add "no cell phone" as a covariate to the previous regression.  Provide a 95% confidence interval for the treatment effect.  Explain why this confidence interval does not differ much from the previous one.
 
 ```{r}
 # Adding "no_cell to the regression"
@@ -515,20 +529,19 @@ lr4f.summary$coefficients["bin:no_cell",]
 print('95% confidence interval')
 lr4f.confint["bin",]
 ```
-**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08166792 0.14853357] without the interaction term**
-**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08108329 0.16826147] with the interaction term**
-**The confidence interval almost matches the previous one as having a cell phone (or not) does not explain any of the variance in the primary treatment effect (bin). The variables are not correlated. The correlation charts and the coefficient for the interation term [-0.02310269(0.03440852)] show the same**
-**TBD**
+**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.0826730 0.1516659] without the interaction term**
+**Answer: The 95% confidence interval of the treatment effect with "no cell" as the co-variate is [0.08046617 0.17037576] with the interaction term**
+**The confidence interval almost matches the previous one as having a cell phone (or not) does not explain any of the variance in the primary treatment effect (bin). The variables are not correlated. The correlation charts and the coefficient for the interation term (-0.01996593  (0.03554587)) show the same**
 
 ```{r}
 # lr4f.summary$coefficients
 ```
 
-## g. Now let's add in the SMS treatment.  Re-run the previous regression with "any SMS" included.  You should get the same results as in Table 4A.  Provide a 95% confidence interval for the treatment effect of the recycling bin.  Explain why this confidence interval does not differ much from the previous one.
+### g. Now let's add in the SMS treatment.  Re-run the previous regression with "any SMS" included.  You should get the same results as in Table 4A.  Provide a 95% confidence interval for the treatment effect of the recycling bin.  Explain why this confidence interval does not differ much from the previous one.
 
 ```{r}
 # Adding SMS to the regression
-# TBD: Do we not need an interaction term? 
+# Do we not need an interaction term? Yes, adding in the next code snippet
 lr4g = lm(avg_bins_treat ~ bin + base_avg_bins_treat + streetF + no_cell + sms, data = d4)
 lr4g.summary = summary(lr4g)
 print('Coefficient for bin')
@@ -549,7 +562,7 @@ scatterplotMatrix( ~ bin + sms, data = d4, main = "Scatterplot Matrix for key va
 
 ```{r}
 # Adding SMS to the regression
-# TBD: Do we not need an interaction term? 
+# Do we not need an interaction term? 
 lr4g = lm(avg_bins_treat ~ bin + base_avg_bins_treat + streetF + no_cell + sms + bin*sms, data = d4)
 lr4g.summary = summary(lr4g)
 print('Coefficient for bin')
@@ -565,15 +578,15 @@ lr4g.confint["bin",]
 ```
 
 **Answer: Yes, we get the same results as table 4A**
-**Answer: The 95% confidence interval with SMS included in the regression is [0.08160886 0.14849843] without the interaction term**
-**The 95% confidence interval with SMS included in the regression is [0.06936329 0.14994262] with the interaction term**
-**The confidence interval does not change again as "sms" does not explain any of the variance/noise in the treatment effect. SMS and bin are fairly independent.**
+**Answer: The 95% confidence interval with SMS included in the regression is [0.0824637 0.1514719 ] without the interaction term**
+**The 95% confidence interval with SMS included in the regression is [0.07193798 0.15518094 ] with the interaction term**
+**The confidence interval does not change again as "sms" does not explain much of the variance/noise in the treatment effect. SMS and bin do not look correlated.Another observation could be that sending an sms does not really help that much on top of providing a bin**
 
-h. Now reproduce the results of column 2 in Table 4B, estimating separate treatment effects for the two types of SMS treatments and the two types of recycling-bin treatments.  Provide a 95% confidence interval for the effect of the unadorned recycling bin.  Explain how your answer differs from that in part (g), and explain why you think it differs.
+### h. Now reproduce the results of column 2 in Table 4B, estimating separate treatment effects for the two types of SMS treatments and the two types of recycling-bin treatments.  Provide a 95% confidence interval for the effect of the unadorned recycling bin.  Explain how your answer differs from that in part (g), and explain why you think it differs.
 
 ```{r}
 # Adding 2 types of SMS treatment
-# TBD: Do we not need an interaction term? Assuming not as we are trying to reproduce the results of table 4B
+# Do we not need an interaction term? Assuming not as we are trying to reproduce the results of table 4B
 lr4h = lm(avg_bins_treat ~ bin_g + bin_s + base_avg_bins_treat + streetF + no_cell + sms_p + sms_g, data = d4)
 lr4h.summary = summary(lr4h)
 print('Coefficient for bin_g')
@@ -593,13 +606,14 @@ lr4h.confint["bin_g",]
 ```
 **Answer: The results match column 2 of Table 4b**
 
-1. The treatment effect of Bin without Sticker is: 1.031902e-01 (2.188886e-02)
-2. The treatment effect of Bin with Sticker is is: 1.278129e-01 (2.223628e-02)
-3. The treatment effect of generic SMS is: 0.01970712 (0.02519764)
-4. The treatment effect of specific SMS is: -0.008041152  (0.025036933)
+1. The treatment effect of Bin without Sticker is: 1.057386e-01 (2.272342e-02)
+2. The treatment effect of Bin with Sticker is is: 1.288619e-01 (2.272963e-02)
+3. The treatment effect of generic SMS is: 0.02950443 (0.02616216)
+4. The treatment effect of specific SMS is: 0.006659619 (0.026030012)
 
-**Answer: The 95% confidence interval with generic recycling bin is [0.06025627 0.14612416 ]**
-**The confidence interval is a little tighter from that in part (g). The increased precision comes by breaking the "bins" variable into more precise "bin_g" and "bin_s". "bin_s" (bins with stickers) is able to explain some of the variance that was earlier in the confidence interval for "bin". **
+**Answer: The 95% confidence interval with generic recycling bin is [0.06116499 0.15031225 ]**
+**The confidence interval is a little tighter from that in part (g). The increased precision comes by breaking the "bins" variable into more precise "bin_g" and "bin_s". "bin_s" (bins with stickers) is able to explain some of the variance that was earlier in the confidence interval for generic "bin". **
+
 *** 
 
 # 5 A Final Practice Problem 
@@ -609,7 +623,7 @@ Here are the (fake) data.
 
 ```{r}
 d5 <- read.csv("./data/ebola_rct2.csv")
-head(d)
+head(d5)
 ```
 ```{r}
 # Getting more famiiliar with the data
@@ -618,7 +632,7 @@ summary(d5)
 
 You are asked to analyze it. Patients' temperature and whether they are vomiting is recorded on day 0 of the experiment, then ZMapp is administered to patients in the treatment group on day 1. Vomiting and temperature is again recorded on day 14.
 
-## a. Without using any covariates, answer this question with regression: What is the estimated effect of ZMapp (with standard error in parentheses) on whether someone was vomiting on day 14? What is the p-value associated with this estimate?
+### a. Without using any covariates, answer this question with regression: What is the estimated effect of ZMapp (with standard error in parentheses) on whether someone was vomiting on day 14? What is the p-value associated with this estimate?
 
 ```{r}
 # Regressing vomiting on day 14 on the treatment
@@ -628,9 +642,9 @@ summary(lr_v1)
 ```
 
 **Answer: The estimated effect is -0.23770(0.08563)**
-** The p-value is 0.006595**
+** The p-value is 0.0066**
 
-## b. Add covariates for vomiting on day 0 and patient temperature on day 0 to the regression from part (a) and report the ATE (with standard error). Also report the p-value.
+### b. Add covariates for vomiting on day 0 and patient temperature on day 0 to the regression from part (a) and report the ATE (with standard error). Also report the p-value.
 
 ```{r}
 ## Adding 2 covariates to the regression above
@@ -639,13 +653,13 @@ summary(lr_v2)
 
 ```
 
-**Answer: TBD:The coefficient/ATE is -0.16554(0.07567)**
+**Answer:The coefficient/ATE is -0.16554(0.07567)**
 **The p-value is .03113**
 
-## c. Do you prefer the estimate of the ATE reported in part (a) or part (b)? Why?
-**Answer: I prefer the estimate in part (b). Its intuitive that patient's medical condition on day 14 would depend to some extent on there baseline condition on day 0. Leaving intuition aside, the analysis above shows that temperature on day 0 is statistically significant at a 5% confidence level. The coefficient of "temperature_day0" is .20 which is ~3 times the standard error of .07634**
+### c. Do you prefer the estimate of the ATE reported in part (a) or part (b)? Why?
+**Answer: I prefer the estimate in part (b). Its intuitive that patient's medical condition on day 14 would depend to some extent on there baseline condition on day 0. Leaving intuition aside, the analysis above shows that temperature on day 0 is statistically significant at a 5% confidence level. The coefficient of "temperature_day0" is .20 which is ~3 times the standard error of .07634. Also we get lower SE for the treatment effect estimate in the model with the baseline vomiting and temperature**
 
-## d. The regression from part (b) suggests that temperature is highly predictive of vomiting. Also include temperature on day 14 as a covariate in the regression from part (b) and report the ATE, the standard error, and the p-value.
+### d. The regression from part (b) suggests that temperature is highly predictive of vomiting. Also include temperature on day 14 as a covariate in the regression from part (b) and report the ATE, the standard error, and the p-value.
 
 ```{r}
 ## Adding temperature on day 14 a covariate to the regression above
@@ -655,13 +669,12 @@ summary(lr_v3)
 **Answer: The ATE(SE) are -0.12010(0.07768).**
 **The p-value is .12541**
 
-## e. Do you prefer the estimate of the ATE reported in part (b) or part (d)? Why?
+### e. Do you prefer the estimate of the ATE reported in part (b) or part (d)? Why?
 
-**Answer: I prefer the estimate in part(b). (d) adds temperature on day 14 as a covariate. This may be "bad control" as the "temperature on day 14" may be an effect of the treatment. The "temperature on day 14" might actually be impacted by both the treatment and the baseline variables (temperature and vomiting on day 0). Adding "temperature on day 14 as a covariate" adds noise to the causal relationship (that we are trying to measure) between the outcome and independent variables (medicine, baseline)**
+**Answer: I prefer the estimate in part(b). (d) adds temperature on day 14 as a covariate. This may be "bad control" as the "temperature on day 14" may be an effect of the treatment. The "temperature on day 14" could  be impacted by both the treatment and the baseline variables (temperature and vomiting on day 0).**
 
-**TBD AIC.....confidence interval has also gone down**
 
-## f. Now let's switch from the outcome of vomiting to the outcome of temperature, and use the same regression covariates as in part (b). Test the hypothesis that ZMapp is especially likely to reduce men's temperatures, as compared to women's, and describe how you did so. What do the results suggest?
+### f. Now let's switch from the outcome of vomiting to the outcome of temperature, and use the same regression covariates as in part (b). Test the hypothesis that ZMapp is especially likely to reduce men's temperatures, as compared to women's, and describe how you did so. What do the results suggest?
 
 ```{r}
 # Regressing Day 14 temperature on the treatment and covariates
@@ -670,7 +683,7 @@ summary(lr_v3)
 lr_v4 = lm(temperature_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0, data = d5)
 summary(lr_v4)
 ```
-*Note: We get an ATE estimate of -0.7554 (0.2587) with significance at the 5% confidence level. The p value is 2.227e-06*
+*Note: We get an ATE estimate of -0.7554 (0.2587) with significance at the 5% confidence level. The p value is .00436*
 
 ```{r}
 # Trying the same regression with sex (male, Female) as a indicator variable Male = 1
@@ -680,32 +693,31 @@ lr_v5 = lm(temperature_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0 + 
 summary(lr_v5)
 
 ```
-** Answer: One way to find out the relationship between sex and treatment would be to make "male" an indicator variable/covariate and add both the variable and the interaction term in the regression equation. The coefficient of the interaction term (male * treat_zmap) would tell us about the delta effect of being both "male" and in "treatment"**
+**Answer: One way to find out the relationship between sex and treatment would be to make "male" an indicator variable/covariate and add both the variable and the interaction term in the regression equation. The coefficient of the interaction term (male * treat_zmap) would tell us about the delta effect of being both "male" and in "treatment"**
 
-**"treat_zmapp:male -2.07669    0.19164 -10.836  < 2e-16 ***"** captures the result of the regression
-** The coefficient of the interaction term is -2.07669(.1916) which is statistically significant at 1% confidence level**
+**The coefficient of the interaction term is -2.07669(.1916) which is statistically significant at 1% confidence level**
 
-** The result tells us that being "male" and in "treatment" is estimated to cause a -2.07 reduction (~ 10 times the standard error) in temperature from the case where this interaction is not present (i.e. women in treatment)**
+**The result tells us that being "male" and in "treatment" is estimated to cause a -2.07 reduction (~ 10 times the standard error) in temperature from the case where this interaction is not present (i.e. women in treatment)**
 
-## g. Suppose that you had not run the regression in part (f). Instead, you speak with a colleague to learn about heterogenous treatment effects. This colleague has access to a non-anonymized version of the same dataset and reports that he had looked at heterogenous effects of the ZMapp treatment by each of 10,000 different covariates to examine whether each predicted the effectiveness of ZMapp on each of 2,000 different indicators of health, for 20,000,000 different regressions in total. Across these 20,000,000 regressions your colleague ran, the treatment's interaction with gender on the outcome of temperature is the only heterogenous treatment effect that he found to be statistically significant. He reasons that this shows the importance of gender for understanding the effectiveness of the drug, because nothing else seemed to indicate why it worked. Bolstering his confidence, after looking at the data, he also returned to his medical textbooks and built a theory about why ZMapp interacts with processes only present in men to cure. Another doctor, unfamiliar with the data, hears his theory and finds it plausible. How likely do you think it is ZMapp works especially well for curing Ebola in men, and why? (This question is conceptual can be answered without performing any computation.)
+### g. Suppose that you had not run the regression in part (f). Instead, you speak with a colleague to learn about heterogenous treatment effects. This colleague has access to a non-anonymized version of the same dataset and reports that he had looked at heterogenous effects of the ZMapp treatment by each of 10,000 different covariates to examine whether each predicted the effectiveness of ZMapp on each of 2,000 different indicators of health, for 20,000,000 different regressions in total. Across these 20,000,000 regressions your colleague ran, the treatment's interaction with gender on the outcome of temperature is the only heterogenous treatment effect that he found to be statistically significant. He reasons that this shows the importance of gender for understanding the effectiveness of the drug, because nothing else seemed to indicate why it worked. Bolstering his confidence, after looking at the data, he also returned to his medical textbooks and built a theory about why ZMapp interacts with processes only present in men to cure. Another doctor, unfamiliar with the data, hears his theory and finds it plausible. How likely do you think it is ZMapp works especially well for curing Ebola in men, and why? (This question is conceptual can be answered without performing any computation.)
 
 **Answer: I would be sceptical of the efficacy of ZMapp (for curing Ebola in men) based on above paragraph alone. With 20M regressions (10K covariates, 2K health outcomes), it is likely that one finds an interaction with statistical significance by chance alone.**
 **From "Field Experiments": With 20 covariates, 1% confidence level,  a statistically significant effect for a sub group can happen for 1 in 6 research studies**
 **Belief in such a claim would require a planned experiment where the treatment is varied along with the variable/sub-group under observation for the heterogenious effect**
 
 
-## h. Now, imagine that what described in part (g) did not happen, but that you had tested this heterogeneous treatment effect, and only this heterogeneous treatment effect, of your own accord. Would you be more or less inclined to believe that the heterogeneous treatment effect really exists? Why?
+### h. Now, imagine that what described in part (g) did not happen, but that you had tested this heterogeneous treatment effect, and only this heterogeneous treatment effect, of your own accord. Would you be more or less inclined to believe that the heterogeneous treatment effect really exists? Why?
 
-**Answer: I would be more inclined to believe in the effect if it was one (or part of a small number of such effects), tested by planning/design, as part of the experiment. The experiment in this case would have to vary the subgroup characteristic we are testing (sex in this case) along with the main treatment (Multi- factor experiment).**
+**Answer: I would be more inclined to believe in the effect if it was tested by planning/design, as part of the experiment. The experiment in this case would have to vary the subgroup characteristic we are testing (sex in this case) along with the main treatment (Multi- factor experiment).**
 **If the experiment is not designed like above, the sub-group/co-variate analysis does not give us causal information. We know that treatment is more effective in groups of men, but we cannot establish why?**
 
-## i. Another colleague proposes that being of African descent causes one to be more likely to get Ebola. He asks you what ideal experiment would answer this question. What would you tell him?  (*Hint: refer to Chapter 1 of Mostly Harmless Econometrics.*)
+### i. Another colleague proposes that being of African descent causes one to be more likely to get Ebola. He asks you what ideal experiment would answer this question. What would you tell him?  (*Hint: refer to Chapter 1 of Mostly Harmless Econometrics.*)
 
 **Answer: This may be one of the FUQ's (defined in MHE chapter 1). It is impossible to come up with a practical experiment that can answer this question.**
 **If we start with randomly chosen people and observe them for Ebola, we can create a record for who gets it. If the group can be divided into those of African descent and those not, we'll be able to observe if the there's more Ebola in one group over the other. Even if we find that more from Aftrican descent get Ebola in our study, we'll not be able to establish a causal relationship due to multiple reasons:**
 1. There's no precise intervention which'll help us do an experiment to establish cause
 2. There are too many confounding factors (Conditions at birth, Time spent in Africa, African parents but born outside......) that are difficult to control for
 
-**The answer to this question does not really help also. One cannot change one's descent. The answer could help spark further investigation th ough i.e. there could be more precise questions on why a subgroup (of the population) is more prone to EBOLA**
+**The answer to this question does not really help also. One cannot change one's descent. The answer could help spark further investigation though i.e. there could be more precise questions on why a subgroup (of the population) is more prone to EBOLA**
 
 
