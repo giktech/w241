@@ -23,8 +23,11 @@ Some guidelines for submitting problem sets in this course:
 ```{r}
 # load packages 
 library(foreign)
+library(data.table)
+library(dplyr)
+library(experiment)
 ```
-
+***
 # 1. Potential Outcomes 
 ## a. Make up a hypothetical schedule of potential outcomes for three Compliers and three Never-Takers where the ATE is positive but the CACE is negative. By ATE, we mean the average treatment effect for the entire population, including both compliers and never-takers.  Note that we can never compute this ATE directly in practice, because we never observe both potential outcomes for any individual, especially for never-takers. That's why this question requires you to provide a complete table of hypothetical potential outcomes for all six subjects.
 
@@ -32,24 +35,27 @@ library(foreign)
 # Simulating the experiment
 # Hypothetical schedule of all the observations
 
-# Is in control? 
+# Control
 dz0 <- c(rep(0, 6))
-# Is in treatment? Compliars and NT's
+# Treatment, Compliars and Never Takers
 dz1 <- c(rep(0,3), rep(1, 3))
-# Effect in control
+# Output variable in control
 yd0 <- c(1, 3, 7, 2, 1, 6)
-# Effect in treatment
-yd1 <- c(2, 3, 9, 3, 2, 2)
+# Output variable in treatment
+yd1 <- c(4, 3, 7, 3, 2, 2)
 
 # Converting to a data frame
 exp.df <- data.frame(dz0, dz1, yd0, yd1)
-# ATE for each
-exp.df$ate <- exp.df$yd1 - exp.df$yd0
+# TE for each
+exp.df$te <- exp.df$yd1 - exp.df$yd0
 exp.df
 
 ```
+
+**They hypothetical schedule is above**
+
 ```{r}
-# Calculations
+# Calculations for ATE & CACE
 
 # ATE
 est.ate <- mean(exp.df$yd1) - mean(exp.df$yd0)
@@ -61,21 +67,33 @@ exp.comp <- exp.df[which(dz1==1),]
 print('DF of compliars')
 exp.comp
 
+# Since we have the entire schedule CACE is just the average treatment effect for the compliars
+# We'll use the subset of the compliars created above
 exp.cace <- mean(exp.comp$yd1 - exp.comp$yd0)
 print('CACE')
 exp.cace
 
 ```
-**Answer: With the DF above, we get an ATE of .166 and the CACE of -.667**
 
+
+**Answer: If we use the entire schedule (hypothetical) we get an ATE of .166 and the CACE of -.667**
+
+###Calculating the ATE estimate without the entire schedule (like in an expreiment, by calculating ATE and then CACE by dividing with the ratio of compliars)
+```{r}
+# The ratio of compliars is 50%
+exp.cace1 = est.ate/.5
+exp.cace1
+```
 ## b. Suppose that an experiment were conducted on your pool of subjects. In what ways would the estimated CACE be informative or misleading? 
 
-**Answer: The estimated CACE would add information on the impact of the treatment, on subjects that were "actually" treated i.e. is the real effect of the treatment. If we calculate the average effect over all the subjects in the treatment group (ATE), we make an implicit assumptions that the treatment effect for "never takers" is 0, which is inaccurate, and could lead to an underestimate of the treatment effect**
+**TBD: Answer: In an experiment, we would not have the full schedule of observations. We'll be able to calculate the ATE and then CACE (cace1) by using ATE and the ratio of compliars. Calculating the CACE that way gives us an estimate of .333 which is misleading. **
 
 ## c. Which population is more relevant to study for future decision making: the set of Compliers, or the set of Compliers plus Never-Takers? Why?
 
-**Answer: The population of compliers is more important for future decision making. That's where the information on real effect of the treatment comes from. Nothing on the "actual" treatment effect is contributed by the "never takers". This is true for most experiment on the efficacy of drugs**
+**Answer: The population of compliers is more important for future decision making. That's where the information on real effect of the treatment comes from.An example would be trying to measure the efficacy of a medicine/pill**
 *There may be some reasons to briefly look at "never takers". It is to get a idea of the ratio of the 2 groups in the overall population. This may be useful in some experiments where we are interested in the "intent to treat" effect instead of the "actual" treatment effect on the treated. Many expriments to influence policy (like rebates for buying health insurance) fall in this category*
+
+***
 
 # Turnout to Vote 
 Suppose that a researcher hires a group of canvassers to contact a set of 1,000 voters randomly assigned to a treatment group. When the canvassing effort concludes, the canvassers report that they successfully contacted 500 voters in the treatment group, but the truth is that they only contacted 250. When voter turnout rates are tabulated for the treatment and control groups, it turns out that 400 of the 1,000 subjects in the treatment group voted, as compared to 700 of the 2,000 subjects in the control group (none of whom were contacted). 
@@ -100,7 +118,7 @@ cace1
 ```
 **Answer: CACE would be .1**
 
-b. Suppose you learned that only 250 subjects were actually treated. What would your estimate of the CACE be? 
+## b. Suppose you learned that only 250 subjects were actually treated. What would your estimate of the CACE be? 
 ```{r}
 # CACE on assumption that 250 subjects were contacted
 cace2 <- itt/(250/1000)
@@ -108,41 +126,214 @@ cace2
 ```
 **Answer: CACE would be .2 in this case**
 
-c. Do the canvassers' exaggerated reports make their efforts seem more or less effective? Define effectiveness either in terms of the ITT or CACE. Why does the definition matter? 
-**Answer: The exaggerated reports make the canvassers' efforts seem less effective (Lower estimate for CACE)**
-**Effectiveness** can be defined in terms of either ITT or CACE. We could either define it as an increasing +ve value (greater than 0) for the ITT or a positive value greater than ITT for CACE.
-**The definition matters as forces us to recognize exactly what we want to measure before the expriment.**
-**In this specific example, we'll concentrate on ITT if we're trying to measure the effectiveness of 1> Trying to reach out to people or knocking on doors and 2> Talking to folks who open the door after the knock**
-**We'll concentrate on CACE if our concern is limited to measure the effect on turnout for those that we are able to contact (2> above)**
+## c. Do the canvassers' exaggerated reports make their efforts seem more or less effective? Define effectiveness either in terms of the ITT or CACE. Why does the definition matter? 
+**Answer: The exaggerated reports make the canvassers' efforts seem less effective. We get a lower estimate for CACE with the exaggerated reports**
+**Effectiveness** can be defined in terms of either ITT or CACE. We could either define it as follows:
+1. +ve value (greater than 0) for the ITT
+2. +ve value for CACE, greater than ITT
+**The definition matters as it forces us to recognize exactly what we want to measure before the expriment.**
+**In this specific example, we'll concentrate on ITT if we're trying to measure the effectiveness of the intent, i.e. knocking on doors**
+**We'll concentrate on CACE if our concern is limited to measure the impact of actually talking to people who open the door**
 **Defining the primary outcome before the experiment would help pick the right metric for measurement**
 
+*** 
 
 # 3. Turnout in Dorms
 Guan and Green report the results of a canvassing experiment conduced in Beijing on the eve of a local election. Students on the campus of Peking University were randomly assigned to treatment or control groups. Canvassers attempted to contact students in their dorm rooms and encourage them to vote. No contact with the control group was attempted. Of the 2,688 students assigned to the treatment group, 2,380 were contacted. A total of 2,152 students in the treatment group voted; of the 1,334 students assigned to the control group, 892 voted. One aspect of this experiment threatens to violate the exclusion restriction. At every dorm room they visited, even those where no one answered, canvassers left a leaflet encouraging students to vote. 
 
 ```{r}
 library(foreign)
-d <- read.dta("./data/Guan_Green_CPS_2006.dta")
-head(d)
+d3 <- read.dta("./data/Guan_Green_CPS_2006.dta")
+head(d3, 20)
+```
+```{r}
+# Finding more about the data
+nrow(d3)
+summary(d3)
+```
+```{r}
+# plot of "treatment" for dorm ID's
+plot(d3$dormid, d3$treat2)
 ```
 
-a. Using the data set from the book's website, estimate the ITT. First, estimate the ITT using the difference in two-group means. Then, estimate the ITT using a linear regression on the appropriate subset of data. *Heads up: There are two NAs in the data frame. Just na.omit to remove these rows.*
+## a. Using the data set from the book's website, estimate the ITT. First, estimate the ITT using the difference in two-group means. Then, estimate the ITT using a linear regression on the appropriate subset of data. *Heads up: There are two NAs in the data frame. Just na.omit to remove these rows.*
 
 ```{r}
 
+# Getting key values out of the data
+
+# Number in treated
+exp3.treat.n = 2688
+# Number that voted from treatment
+exp3.treat.v = 2152
+# Number that were contacted
+exp3.treat.c = 2380
+
+# Number in control
+exp3.cont.n = 1334
+# Number that voted
+exp3.cont.v = 892
+
+# Conversion ratio in treatment
+exp3.treat.convert = exp3.treat.v/exp3.treat.n
+paste0("Conversion ratio in treatment: ", exp3.treat.convert)
+
+# Conversion ratio in control
+exp3.cont.convert = exp3.cont.v/exp3.cont.n
+paste0("Conversion ratio in control: ", exp3.cont.convert)
+
+# Ratio of actually treated
+exp3.treat.ar = exp3.treat.c/exp3.treat.n
+paste0("Ratio of actually treated or alpha: ", exp3.treat.ar)
+
 ```
 
-b. Use randomization inference to test the sharp null hypothesis that the ITT is zero for all observations, taking into account the fact that random assignment was clustered by dorm room. Interpret your results. 
+### ITT using difference in 2 group means. 
+```{r}
+itt.gm = exp3.treat.convert - exp3.cont.convert
+paste0("ITT using difference in means: ", itt.gm)
+```
+### ITT using linear regression
+```{r}
+# Linear regression
+lr3 <- lm(turnout ~ treat2, data=d3, na.action = na.omit)
+summary(lr3)
+paste0("ITT with regression: ", lr3$coefficients['treat2'])
+```
+
+**Answer**
+**ITT from difference in means: 0.132**
+**ITT from regression: 0.132 (0.01422)**
+
+
+## b. Use randomization inference to test the sharp null hypothesis that the ITT is zero for all observations, taking into account the fact that random assignment was clustered by dorm room. Interpret your results. 
 
 ```{r}
-
+# Pull out the cluster ID's
+clusters.all <- unique(d3$dormid)
+# How many clusters
+clusters.n = length(all_clusters)
+clusters.n
+```
+```{r}
+head(clusters.all)
 ```
 
-c. Assume that the leaflet had no effect on turnout. Estimate the CACE. Do this in two ways: First, estimate the CACE using means. Second, use some form of linear model to estimate this as well. If you use a 2SLS, then report the standard errors and draw inference about whether the leaflet had any causal effect among compliers. 
 
 ```{r}
+# Generic function to pick the cluster ID's for treatment
+
+clusters.in.treatment = clusters.n/2
+paste0("Clusters in treatment: ", clusters.in.treatment)
+
+randomize.clusters <- function(d) {
+  treat.clusters <- sample(x = clusters.all, 
+                                size = clusters.in.treatment, 
+                                replace = FALSE)
+  # returns 1 if a cluster ID in those that are picked
+  return(as.numeric(d$dormid %in% treat.clusters))
+}
+
+# Generic function to estimate the ATE
+est.ate <- function(result, treat) { 
+  mean(result[treat==1]) - mean(result[treat==0])
+  } 
+```
+
+```{r}
+# Trying out one randomization. Now we have the data prepared for the experiment
+# First creating a new DF
+d31 <- read.dta("./data/Guan_Green_CPS_2006.dta")
+d31$treat2 <- randomize.clusters(d31)
 
 ```
+
+```{r}
+# Finding out more about the new data set
+clusters <- group_by(d31, dormid)
+clusters.summary <- summarize(clusters, count=n(), mean_y=mean(turnout), mean_treat2=mean(treat2) )
+clusters.summary
+```
+```{r}
+# Validating the data
+mean(d31$turnout[d31$treat2 == 1])
+mean(d31$turnout[d31$treat2 == 0])
+
+# Got to remove the Rows with na
+nrow(d31)
+d31 <- na.omit(d31)
+nrow(d31)
+
+
+# Now validate
+mean(d31$turnout[d31$treat2 == 1])
+mean(d31$turnout[d31$treat2 == 0])
+```
+
+```{r}
+# ATE for one randomization
+ateR <- est.ate(d31$turnout, d31$treat2)
+ateR
+```
+```{r}
+# 1K Randomizations
+# Repeating the expriment 10,000 times
+distribution.under.sharp.null <- replicate(1000, est.ate(d31$turnout, (randomize.clusters(d31))))
+ate.mean <- mean(distribution.under.sharp.null)
+paste0("Mean ITT from 5k randomizations: ", ate.mean)
+
+```
+```{r}
+# Graph for the estimates
+plot(density(distribution.under.sharp.null), 
+     main = "Density under Sharp Null")
+abline(v = itt.gm, col = "blue")
+```
+**TODO**
+
+## c. Assume that the leaflet had no effect on turnout. Estimate the CACE. Do this in two ways: First, estimate the CACE using means. Second, use some form of linear model to estimate this as well. If you use a 2SLS, then report the standard errors and draw inference about whether the leaflet had any causal effect among compliers. 
+
+### CACE using means
+```{r}
+# CACE using the means. ITT/alpha
+cace.m <- itt.gm/exp3.treat.ar
+paste0('CACE using means: ', cace.m)
+
+```
+### CACE using a linear model
+
+We'll split treatment into 2 variables for the new linear model:
+1. "contact": This already exists in the data. Its when the door is answered
+2. "leaflet": Generated independent variable (treat2 * !contact). Its when the door is not answered and a leaflet is dropped
+Our model tries to measure the effect of contact and leaflet separately using the regression below
+
+```{r}
+# Adding a new variable "leaflet"
+d3$leaflet <- d3$treat2 * !d3$contact
+head(d3, 20)
+summary(d3)
+```
+
+```{r}
+lr33 <- lm(turnout ~ contact + leaflet, data=d3, na.action = na.omit)
+summary(lr33)
+# paste0("ITT with regression: ", lr33$coefficients['treat2', 'contact'])
+```
+**Answer: CACE using means is 0.14900280951961**  
+**The linear model for estimating CACE is as follows: **  
+**turnout = intercept + a(Contact) + b(leaflet) + errors**  
+**We try to find out the impact of contact and leaflet (when there's no contact but a leaflet is dropped) separately**  
+**The coefficients from the model are as follows: **  
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.66867    0.01162  57.526  < 2e-16 ***
+contact      0.13562    0.01452   9.341  < 2e-16 ***
+leaflet      0.10332    0.02687   3.845 0.000123 ***
+
+**We can interpret the coefficient of contact as the CACE: .136 (.0145)**  
+**The model shows that dropping the leaflet as a significant positive effect on the outcome 0.10332 (0.02687).**
+
+***
 
 # 4. Why run a placebo? 
 Nickerson describes a voter mobilization experiment in which subjects were randomly assigned to one of three conditions: a baseline group (no contact was attempted); a treatment group (canvassers attempted to deliver an encouragement to vote); and a placebo group (canvassers attempted to deliver an encouragement to recycle). Based on the results in the table below answer the following questions 
