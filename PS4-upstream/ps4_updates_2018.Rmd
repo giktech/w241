@@ -410,7 +410,7 @@ paste0("Difference in complier estimate between treatment and placebo group: ", 
 
 ## b. Do the data suggest that Never Takers in the treatment and placebo groups have the same rate of turnout? Is this comparison informative?    
 
-**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates the similarity of the groups. It also assures that without the treatment and placebo actions, the turnout remains close to the baseline**
+**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates that the assignmenet procedure has preserved the comparability of the groups.**  
 
 
 ## c. Estimate the CACE of receiving the placebo. Is this estimate consistent with the substantive assumption that the placebo has no effect on turnout?   
@@ -434,7 +434,7 @@ placebo.cace = placebo.itt/est.compl.placebo
 paste0('CACE for the placebo group: ', placebo.cace)
 ```
 
-**Answer: The CACE estimate from the placebo groupo is .027. This supports our assuption that the placebo has no effect on the turnout**  
+**Answer: The CACE estimate from the placebo groupo is .027 (~2.7%). This supports our assuption that the placebo has little to no effect on the turnout**  
 
 ## d. Estimate the CACE of receiving the treatment using two different methods. First, use the conventional method of dividing the ITT by the ITT_{D}. (This should be a treatment vs. control comparison.)
 
@@ -458,7 +458,7 @@ treat.cace = treat.itt/est.compl.treat
 paste0('CACE for the treatment group: ', treat.cace)
 
 ```
-**Answer: The CACE estimate for the treatment group is 0.144**  
+**Answer: The CACE estimate for the treatment group is 0.144 (~14.4%)**  
 
 ## e. Then, second, compare the turnout rates among the Compliers in both the treatment and placebo groups. Interpret the results.  
 
@@ -468,13 +468,14 @@ treat.cace1 = .39 - .2979
 paste0('CACE for the treatment group by comparing with compliers in placebo group: ', treat.cace1)
 
 ```
-**Answer: CACE for the treatment group by comparing with compliers in placebo group is 0.0921. A 9.2% uplift in the turnout is significant when compared to the baseline. It means that ~9% more folks show up for voting from the group that answers the door, and gets the encouragement to vote **  
+**Answer: CACE for the treatment group by comparing with compliers in placebo group is 0.0921. A 9.2% uplift in the turnout is significant with respect to the baseline turnout (31.22%). It means that ~9.2% more folks show up for voting from the group that answers the door, and gets the encouragement to vote, when compared to folks that answer the door but do not get the encouragement to vote (instead they get encouragement to recycle) **  
 *This estimate is lower than what we get from the ITT/ITT_d method. The ITT/ITT_d method over-estimates the CACE as it ignores the differences among the compliers and never takers.*
 
 
 ## f. Based on what we talked about in class -- that the rate of compliance determines whether one or another design is more efficient -- given the compliance rate in this study, which design *should* provide a more efficient estimate of the treatment effect? If you want to review the specific paper that makes this claim, check out [this link](https://github.com/UCB-MIDS/experiments-causality/blob/master/readings/GerberGreenKaplanKern.2010.pdf). Does it?  
 
-**TBD: Answer: The rate of complience in this study is low, ~ 18%**
+**Answer: The rate of complience in this study is ~18%, close to the 20% line in Fig 3 [GerberGreenKaplanKern.2010]. At this rate of complience, its noted in the paper (Fig 3) that assigning 40% of the subjects to Placebo group creates the most efficient design**
+**TBD: Does it?**
 
 
 <!--
