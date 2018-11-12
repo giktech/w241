@@ -354,25 +354,127 @@ Nickerson describes a voter mobilization experiment in which subjects were rando
  
 **First** Use the information to make a table that has a full recovery of this data. That is, make a `data.frame` or a `data.table` that will have as many rows a there are observations in this data, and that would fully reproduce the table above. (*Yes, this might seem a little trivial, but this is the sort of "data thinking" that we think is important.*)
 
-a. Estimate the proportion of Compliers by using the data on the Treatment group.  Then compute a second estimate of the proportion of Compliers by using the data on the Placebo group.  Are these sample proportions statistically significantly different from each other?  Explain why you would not expect them to be different, given the experimental design. (Hint: ITT_D means "the average effect of the treatment on the dosage of the treatment." I.E., it’s the contact rate $\alpha$ in the async).
-
-b. Do the data suggest that Never Takers in the treatment and placebo groups have the same rate of turnout? Is this comparison informative? 
-
-c. Estimate the CACE of receiving the placebo. Is this estimate consistent with the substantive assumption that the placebo has no effect on turnout? 
-
-d. Estimate the CACE of receiving the treatment using two different methods. First, use the conventional method of dividing the ITT by the ITT_{D}. (This should be a treatment vs. control comparison.)
-
+### Making the data table
 ```{r}
+# Converting the information in above table to variables
+n.base = 2572
+n.treat.c = 486
+n.treat.nt = 2086
+n.placebo.c = 470
+n.placebo.nt = 2109
 
+# Total number of observations
+n.observations = n.base + n.treat.c + n.treat.nt + n.placebo.nt + n.placebo.c
+paste0('Total number of observations: ', n.observations)
 ```
 
-e. Then, second, compare the turnout rates among the Compliers in both the treatment and placebo groups. Interpret the results. 
-
 ```{r}
-
+# Dataframe corresponding to the observations above
+df4 <- data.frame(
+                  "baseline" = c(rep(1,n.base), rep(0, n.observations - n.base)),
+                  "treatment.c" = c(rep(0, n.base), rep(1, n.treat.c ), rep(0, n.observations - n.base - n.treat.c)),
+                  "treatment.nt" = c(rep(0, n.base), rep(0, n.treat.c ), rep(1, n.treat.nt), rep(0, n.observations - n.base - n.treat.c - n.treat.nt)),
+                  "placebo.c" = c(rep(0, n.base), rep(0, n.treat.c ), rep(0, n.treat.nt), rep(1, n.placebo.c), rep(0, n.observations - n.base - n.treat.c - n.treat.nt - n.placebo.c )),
+                  "placebo.nt" = c(rep(0, n.base), rep(0, n.treat.c ), rep(0, n.treat.nt), rep(0, n.placebo.c), rep(1, n.placebo.nt)),
+                  "vote" = c(rbinom(n.base, 1, .3122), rbinom(n.treat.c, 1, .3909), rbinom(n.treat.nt, 1, .3274), rbinom(n.placebo.c, 1, .2979), rbinom(n.placebo.nt, 1, .3215))
+                  )
+paste0('Total number of rows in the dataframe: ', nrow(df4))
 ```
 
-f. Based on what we talked about in class -- that the rate of compliance determines whether one or another design is more efficient -- given the compliance rate in this study, which design *should* provide a more efficient estimate of the treatment effect? If you want to review the specific paper that makes this claim, check out [this link](https://github.com/UCB-MIDS/experiments-causality/blob/master/readings/GerberGreenKaplanKern.2010.pdf). Does it? 
+```{r}
+# validation
+head(df4, 10)
+summary(df4)
+```
+
+## a. Estimate the proportion of Compliers by using the data on the Treatment group.  Then compute a second estimate of the proportion of Compliers by using the data on the Placebo group.  Are these sample proportions statistically significantly different from each other?  Explain why you would not expect them to be different, given the experimental design. (Hint: ITT_D means "the average effect of the treatment on the dosage of the treatment." I.E., it’s the contact rate $\alpha$ in the async).
+
+```{r}
+# Estimate of compliers from the treatment group
+est.compl.treat = n.treat.c/(n.treat.c + n.treat.nt)
+# Estimate of compliers from the placebo group
+est.compl.placebo = n.placebo.c/(n.placebo.c + n.placebo.nt)
+
+paste0("Estimate of compliers from the treatment group: ", est.compl.treat)
+paste0("Estimate of compliers from the placebo group: ", est.compl.placebo)
+
+# Difference in the complier ratio in the 2 groups
+paste0("Difference in complier estimate between treatment and placebo group: ", est.compl.treat - est.compl.placebo)
+```
+**Answer:**  
+*Estimate of compliers from the treatment group: 0.18895800933126*  
+*Estimate of compliers from the placebo group: 0.182241178751454*  
+*Difference in complier estimate between treatment and placebo group: 0.00671683057980568*  
+**The proportions are not significantly different from each other**  
+**TODO We'd not expect them to be different as the groups "treatment", "placebo" are randomly assigned from the same population.**  
+
+## b. Do the data suggest that Never Takers in the treatment and placebo groups have the same rate of turnout? Is this comparison informative?    
+
+**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates the similarity of the groups. It also assures that without the treatment and placebo actions, the turnout remains close to the baseline**
+
+
+## c. Estimate the CACE of receiving the placebo. Is this estimate consistent with the substantive assumption that the placebo has no effect on turnout?   
+**Answer: We can get an estimate of the CACE by the ITT/ITT_D method**
+```{r}
+# CACE of receiving the placebo
+
+# Total turnout in the placebo group
+placebo.turn = .2979 * n.placebo.c + .3215 * n.placebo.nt
+paste0('Number that voted from the placebo group: ', placebo.turn)
+placebo.turn.per = placebo.turn/(n.placebo.c + n.placebo.nt)
+paste0('Ratio of voters from the placebo group: ', placebo.turn.per)
+
+# Comparing with the baseline
+placebo.itt = placebo.turn.per - .3122
+paste0('ITT for the placebo group: ', placebo.itt)
+
+# CACE using ITT and alpha
+paste0('alpha for the placebo group: ', est.compl.placebo)
+placebo.cace = placebo.itt/est.compl.placebo
+paste0('CACE for the placebo group: ', placebo.cace)
+```
+
+**Answer: The CACE estimate from the placebo groupo is .027. This supports our assuption that the placebo has no effect on the turnout**  
+
+## d. Estimate the CACE of receiving the treatment using two different methods. First, use the conventional method of dividing the ITT by the ITT_{D}. (This should be a treatment vs. control comparison.)
+
+```{r}
+# ITT for the treatment group
+
+# Total turnout in the treatment group
+treat.turn = n.treat.c * .3909 + n.treat.nt * .3274
+paste0('Number that voted from the treatment group: ', treat.turn)
+treat.turn.per = treat.turn/(n.treat.c + n.treat.nt)
+paste0('Ratio of voters from the treatment group: ', treat.turn.per)
+
+# We compare with the baseline to find the ITT
+treat.itt = treat.turn.per - .3122
+paste0('ITT for the treatment group: ', treat.itt)
+
+paste0('Alpha for the treatment group: ', est.compl.treat)
+
+# CACE using ITT and alpha
+treat.cace = treat.itt/est.compl.treat
+paste0('CACE for the treatment group: ', treat.cace)
+
+```
+**Answer: The CACE estimate for the treatment group is 0.144**  
+
+## e. Then, second, compare the turnout rates among the Compliers in both the treatment and placebo groups. Interpret the results.  
+
+```{r}
+# Turnout difference among compliers in treatment and placebo
+treat.cace1 = .39 - .2979
+paste0('CACE for the treatment group by comparing with compliers in placebo group: ', treat.cace1)
+
+```
+**Answer: CACE for the treatment group by comparing with compliers in placebo group is 0.0921. A 9.2% uplift in the turnout is significant when compared to the baseline. It means that ~9% more folks show up for voting from the group that answers the door, and gets the encouragement to vote **  
+*This estimate is lower than what we get from the ITT/ITT_d method. The ITT/ITT_d method over-estimates the CACE as it ignores the differences among the compliers and never takers.*
+
+
+## f. Based on what we talked about in class -- that the rate of compliance determines whether one or another design is more efficient -- given the compliance rate in this study, which design *should* provide a more efficient estimate of the treatment effect? If you want to review the specific paper that makes this claim, check out [this link](https://github.com/UCB-MIDS/experiments-causality/blob/master/readings/GerberGreenKaplanKern.2010.pdf). Does it?  
+
+**TBD: Answer: The rate of complience in this study is low, ~ 18%**
 
 
 <!--
