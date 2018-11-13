@@ -26,7 +26,59 @@ library(foreign)
 library(data.table)
 library(dplyr)
 library(experiment)
+library(ggplot2)
+library
 ```
+*Generic multiplot function copied from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/*
+```{r}
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+
 ***
 # 1. Potential Outcomes 
 ## a. Make up a hypothetical schedule of potential outcomes for three Compliers and three Never-Takers where the ATE is positive but the CACE is negative. By ATE, we mean the average treatment effect for the entire population, including both compliers and never-takers.  Note that we can never compute this ATE directly in practice, because we never observe both potential outcomes for any individual, especially for never-takers. That's why this question requires you to provide a complete table of hypothetical potential outcomes for all six subjects.
@@ -58,9 +110,9 @@ exp.df
 # Calculations for ATE & CACE
 
 # ATE
-est.ate <- mean(exp.df$yd1) - mean(exp.df$yd0)
+exp.ate <- mean(exp.df$yd1) - mean(exp.df$yd0)
 print('ATE')
-est.ate
+exp.ate
 
 # Subset DF for compliars
 exp.comp <- exp.df[which(dz1==1),]
@@ -81,7 +133,7 @@ exp.cace
 ###Calculating the ATE estimate without the entire schedule (like in an expreiment, by calculating ATE and then CACE by dividing with the ratio of compliars)
 ```{r}
 # The ratio of compliars is 50%
-exp.cace1 = est.ate/.5
+exp.cace1 = exp.ate/.5
 exp.cace1
 ```
 ## b. Suppose that an experiment were conducted on your pool of subjects. In what ways would the estimated CACE be informative or misleading? 
@@ -212,14 +264,14 @@ paste0("ITT with regression: ", lr3$coefficients['treat2'])
 # Pull out the cluster ID's
 clusters.all <- unique(d3$dormid)
 # How many clusters
-clusters.n = length(all_clusters)
+clusters.n = length(clusters.all)
 clusters.n
 ```
 ```{r}
 head(clusters.all)
 ```
 
-
+### Generic functions for cluster randomization and ATE
 ```{r}
 # Generic function to pick the cluster ID's for treatment
 
@@ -503,33 +555,144 @@ National surveys indicate that college roommates tend to have correlated weight.
 A doctoral student conducted an experiment in which she randomly varied whether she ran or walked 40 minutes each morning. In the middle of the afternoon over a period of 26 days she measured the following outcome variables: (1) her weight; (2) her score in Tetris; (3) her mood on a 0-5 scale; (4) her energy; and (5) whether she got a question right on the math GRE. 
 
 ```{r}
-d <- read.dta("./data/Hough_WorkingPaper_2010.dta")
-head(d)
+d5 <- read.dta("./data/Hough_WorkingPaper_2010.dta")
+head(d5)
+tail(d5)
 ``` 
-
-a. Suppose you were seeking to estimate the average effect of running on her Tetris score. Explain the assumptions needed to identify this causal effect based on this within-subjects design. Are these assumptions plausible in this case? What special concerns arise due to the fact that the subject was conducting the study, undergoing the treatments, and measuring her own outcomes? 
-
-b. Estimate the effect of running today on Tetris score. What is the ATE?
-
+### Getting a visual sense of the data  
 
 ```{r}
+# Library tidyr to gather data for multiple plots
+library(reshape2)
 
+# Getting a visual sense of the data
+
+# Run
+p1 <- ggplot(d5, aes(x=day, y=run)) +
+    geom_point() +
+    geom_smooth(alpha=.2, size=1) +
+    ggtitle("Days with a run")
+
+# Weight
+p2 <- ggplot(d5, aes(x=day, y=weight)) +
+    geom_point(alpha=.3) +
+    geom_smooth(alpha=.2, size=1) +
+    ggtitle("Weight by the day")
+
+# Gather data for mood and energy
+d51 <- gather(d5, "mood", "energy")
+
+# Mood, appetite, Energy
+p3 <- ggplot(d5, aes(x=day)) +
+    geom_line(aes(y = mood), color = "blue") +
+    geom_line(aes(y = appetite), color = "red") +
+    geom_line(aes(y = energy), color = "grey") +
+    ggtitle("Mood, appetite and energy by the day")
+
+# GRE
+p4 <- ggplot(d5, aes(x=day, y=gre)) +
+    geom_point() +
+    geom_smooth(alpha=.2, size=1) +
+    ggtitle("GRE by days")
+
+# Tetris
+p5 <- ggplot(d5, aes(x=day, y=tetris)) +
+    geom_point(alpha=.3) +
+    geom_smooth(alpha=.2, size=1) +
+    ggtitle("Tetris score by the day")
+
+
+# Plot using the multiplot function
+multiplot(p1, p2, p3, p4, p5, cols=3)
 ```
 
-c. One way to lend credibility to with-subjects results is to verify the no-anticipation assumption. Construct a regression using the variable `run` to predict the `tetris` score *on the preceding day*. Presume that the randomization is fixed. Why is this a test of the no-anticipation assumption? Does a test for no-anticipation confirm this assumption? 
+## a. Suppose you were seeking to estimate the average effect of running on her Tetris score. Explain the assumptions needed to identify this causal effect based on this within-subjects design. Are these assumptions plausible in this case? What special concerns arise due to the fact that the subject was conducting the study, undergoing the treatments, and measuring her own outcomes? 
+
+## b. Estimate the effect of running today on Tetris score. What is the ATE?  
+*One way to find the ATE would be to compare the means for days when the student does or does not run*
+*We can use the earlier define est.ate function*
 
 ```{r}
+# est.ate(results, treat)
+ate.run.tet = est.ate(d5$tetris, d5$run)
+paste0('Effect of running on Tetris score: ', ate.run.tet)
+
+# The result is NA. Must be some NA's in the data. Lets find out
+summary(d5)
+```
+```{r}
+# Removing the NA's
+d5 = na.omit(d5)
+
+summary(d5)
 
 ```
+```{r}
+# est.ate(results, treat)
+ate.run.tet = est.ate(d5$tetris, d5$run)
+paste0('Effect of running on Tetris score: ', ate.run.tet)
 
-d. Now let's use regression to put a standard error on our ATE estimate from part (b). Regress Tetris score on the the variable `run`, this time using the current rather than the future value of `run`.  Is the impact on Tetris score statistically significant? 
+```
+*Another method would be to compare means of differences from the previous day for days that the student runs or not*  
+```{r}
+# Adding a column to compare with the previous day
+d5$tetris_diff = d5$tetris - lag(d5$tetris)
+```
+```{r}
+d51 <- na.omit(d5)
+head(d51)
+```
+```{r}
+# est.ate(results, treat)
+ate.run.tet1 = est.ate(d5$tetris_diff, d5$run)
+paste0('Effect of running on Tetris score: ', ate.run.tet)
+```
+**Answer: Both methods lead to an ATE of 13613.1. Seems running has a positive impact of ~13613 points
 
-e. If Tetris responds to exercise, one might suppose that energy levels and GRE scores would as well. Are these hypotheses borne out by the data?  
+## c. One way to lend credibility to with-subjects results is to verify the no-anticipation assumption. Construct a regression using the variable `run` to predict the `tetris` score *on the preceding day*. Presume that the randomization is fixed. Why is this a test of the no-anticipation assumption? Does a test for no-anticipation confirm this assumption? 
 
-f. Suppose the student decides to publish her results on Tetris, since she finds those most interesting.  In the paper she writes, she chooses to be concise by ignoring the data she collected on energy levels and GRE scores, since she finds those results less interesting.  How might you criticize the student's decision?  What trap may she have fallen into?
+```{r}
+# We'll add a column with the previous days tetris scores
+d5$tetris_lag = lag(d5$tetris)
+head(d5)
+```
+```{r}
+# Regression to predict tetris score on the preceding day
+lr5c <- lm(tetris_lag ~ run + tetris + day, data=d5, na.action = na.omit)
+summary(lr5c)
+```
+**Answer: TBD**
 
-g. After submitting her paper to a journal, the student thinks of another hypothesis.  What if running has a relatively long-lasting effect on Tetris scores?  Perhaps both today's running and yesterday's running will affect Tetris scores.  Run a regression of today's Tetris score on both today's `run` variable and yesterday's `run` variable.  How does your coefficient on running today compare with what you found in part (d)?  How do you interpret this comparison?
+## d. Now let's use regression to put a standard error on our ATE estimate from part (b). Regress Tetris score on the the variable `run`, this time using the current rather than the future value of `run`.  Is the impact on Tetris score statistically significant? 
+```{r}
+# Regression of tetris score on run
+lr5d = lm(tetris~run, data=d5, na.action = na.omit)
+summary(lr5d)
 
-h. (optional) Note that the observations in our regression are not necessarily independent of each other. An individual might have serially correlated outcomes, regardless of treatment.  For example, I might find that my mood is better on weekends than on weekdays, or I might find that I'm terrible at playing Tetris in the few days before a paper is due, but I get better at the game once my stress level has lowered. In computing standard errors for a regression, OLS assumes that the observations are all independent of each other.  If they are positively serially correlated, it's possible that OLS will underestimate the standard errors.
+```
+**Answer: We see an ATE (coefficient of run) = 13613 (4856). Yes, the impact of run on tetris is statistically significant.**
+
+## e. If Tetris responds to exercise, one might suppose that energy levels and GRE scores would as well. Are these hypotheses borne out by the data? 
+```{r}
+# Regressing GRE score on the variable run
+lr5e = lm(gre~run, data=d5, na.action = na.omit)
+summary(lr5e)
+```
+**Answer: The GRE score is not effected by "run"**
+*run          -0.1571 (0.1937)*  
+
+```{r}
+# Regressing "energy" score on the variable "run""
+lr5e1 = lm(energy~run, data=d5, na.action = na.omit)
+summary(lr5e1)
+```
+**Answer: "energy" is not effected by "run"**
+*run          0.07143(0.44074)*  
+
+## f. Suppose the student decides to publish her results on Tetris, since she finds those most interesting.  In the paper she writes, she chooses to be concise by ignoring the data she collected on energy levels and GRE scores, since she finds those results less interesting.  How might you criticize the student's decision?  What trap may she have fallen into?
+
+## g. After submitting her paper to a journal, the student thinks of another hypothesis.  What if running has a relatively long-lasting effect on Tetris scores?  Perhaps both today's running and yesterday's running will affect Tetris scores.  Run a regression of today's Tetris score on both today's `run` variable and yesterday's `run` variable.  How does your coefficient on running today compare with what you found in part (d)?  How do you interpret this comparison?
+
+#h. (optional) Note that the observations in our regression are not necessarily independent of each other. An individual might have serially correlated outcomes, regardless of treatment.  For example, I might find that my mood is better on weekends than on weekdays, or I might find that I'm terrible at playing Tetris in the few days before a paper is due, but I get better at the game once my stress level has lowered. In computing standard errors for a regression, OLS assumes that the observations are all independent of each other.  If they are positively serially correlated, it's possible that OLS will underestimate the standard errors.
 
 To check this, let's do randomization inference in the regression context.  Recall that the idea of randomization inference is that under the sharp null hypothesis, we can re-randomize, recompute the ATE, and get approximately the right answer (zero) for the treatment effect.  So, returning to the regression we ran in part (g), please generate 1000 new randomizations of the `run` variable, use those to replace the current and lagged values of `run` in your dataset, then run the regression again.  Record the coefficient you get on the contemporaneous value of `run`, and repeat this re-randomization exercise 1000 times.  Plot the distribution of beta. What are the 2.5% and 97.5% quantiles?  How do they compare with the width of the 95% confidence interval you got for your main `run` coefficient in the regression in part (g)?
