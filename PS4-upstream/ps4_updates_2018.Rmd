@@ -20,14 +20,13 @@ Some guidelines for submitting problem sets in this course:
 - Please ensure that someone (us!) can compile your solution set. The best way is to use the web-hosted links we've provided. 
 -->
 
-```{r}
+```{r results='hide', message=FALSE}
 # load packages 
 library(foreign)
 library(data.table)
 library(dplyr)
 library(experiment)
 library(ggplot2)
-library
 ```
 *Generic multiplot function copied from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/*
 ```{r}
@@ -579,8 +578,6 @@ p2 <- ggplot(d5, aes(x=day, y=weight)) +
     geom_smooth(alpha=.2, size=1) +
     ggtitle("Weight by the day")
 
-# Gather data for mood and energy
-d51 <- gather(d5, "mood", "energy")
 
 # Mood, appetite, Energy
 p3 <- ggplot(d5, aes(x=day)) +
@@ -637,6 +634,7 @@ paste0('Effect of running on Tetris score: ', ate.run.tet)
 ```{r}
 # Adding a column to compare with the previous day
 d5$tetris_diff = d5$tetris - lag(d5$tetris)
+head(d5)
 ```
 ```{r}
 d51 <- na.omit(d5)
@@ -644,7 +642,7 @@ head(d51)
 ```
 ```{r}
 # est.ate(results, treat)
-ate.run.tet1 = est.ate(d5$tetris_diff, d5$run)
+ate.run.tet1 = est.ate(d51$tetris_diff, d5$run)
 paste0('Effect of running on Tetris score: ', ate.run.tet)
 ```
 **Answer: Both methods lead to an ATE of 13613.1. Seems running has a positive impact of ~13613 points
@@ -689,9 +687,25 @@ summary(lr5e1)
 **Answer: "energy" is not effected by "run"**
 *run          0.07143(0.44074)*  
 
+**Answer: "GRE score" and "energy" do not seem to respond to exercise. The ATE for both are smaller than one standard deviation. The values are also practically insignificant**
+
 ## f. Suppose the student decides to publish her results on Tetris, since she finds those most interesting.  In the paper she writes, she chooses to be concise by ignoring the data she collected on energy levels and GRE scores, since she finds those results less interesting.  How might you criticize the student's decision?  What trap may she have fallen into?
 
+**TBD**
+
 ## g. After submitting her paper to a journal, the student thinks of another hypothesis.  What if running has a relatively long-lasting effect on Tetris scores?  Perhaps both today's running and yesterday's running will affect Tetris scores.  Run a regression of today's Tetris score on both today's `run` variable and yesterday's `run` variable.  How does your coefficient on running today compare with what you found in part (d)?  How do you interpret this comparison?
+```{r}
+# Adding a lag variable to the data set
+d5$run_lag = lag(d5$run)
+head(d5)
+```
+```{r}
+# Regression on run for current and previous day
+lr5g = lm(tetris~run + run_lag, data=d5, na.action = na.omit)
+summary(lr5g)
+```
+**Answer: The coefficient of run in this regression is 14785.8(4961.9). The coefficient in "d" was 13613 (4856). Both the coefficient and the SE increases by ~10%. This differnece is 1/3rd the standard error and does not look significant.**  
+**Previous days' run does not show the same impact as today's run on the tetris score**
 
 #h. (optional) Note that the observations in our regression are not necessarily independent of each other. An individual might have serially correlated outcomes, regardless of treatment.  For example, I might find that my mood is better on weekends than on weekdays, or I might find that I'm terrible at playing Tetris in the few days before a paper is due, but I get better at the game once my stress level has lowered. In computing standard errors for a regression, OLS assumes that the observations are all independent of each other.  If they are positively serially correlated, it's possible that OLS will underestimate the standard errors.
 
