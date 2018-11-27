@@ -90,6 +90,9 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 dz0 <- c(rep(0, 6))
 # Treatment, Compliars and Never Takers
 dz1 <- c(rep(0,3), rep(1, 3))
+
+# Hypothetical measurements
+
 # Output variable in control
 yd0 <- c(1, 3, 7, 2, 1, 6)
 # Output variable in treatment
@@ -97,18 +100,19 @@ yd1 <- c(4, 3, 7, 3, 2, 2)
 
 # Converting to a data frame
 exp.df <- data.frame(dz0, dz1, yd0, yd1)
-# TE for each
+
+# Treatment effect for each
 exp.df$te <- exp.df$yd1 - exp.df$yd0
 exp.df
 
 ```
 
-**They hypothetical schedule is above**
+**The hypothetical schedule is above**
 
 ```{r}
 # Calculations for ATE & CACE
 
-# ATE
+# ATE estimate based on the hypothetical data
 exp.ate <- mean(exp.df$yd1) - mean(exp.df$yd0)
 print('ATE')
 exp.ate
@@ -129,7 +133,7 @@ exp.cace
 
 **Answer: If we use the entire schedule (hypothetical) we get an ATE of .166 and the CACE of -.667**
 
-###Calculating the ATE estimate without the entire schedule (like in an expreiment, by calculating ATE and then CACE by dividing with the ratio of compliars)
+###Calculating the ATE estimate without the entire schedule (like in an expreriment, by calculating ATE and then CACE by dividing with the ratio of compliars). This will obviously not match the one we got from the hypothetical schedule
 ```{r}
 # The ratio of compliars is 50%
 exp.cace1 = exp.ate/.5
@@ -137,12 +141,12 @@ exp.cace1
 ```
 ## b. Suppose that an experiment were conducted on your pool of subjects. In what ways would the estimated CACE be informative or misleading? 
 
-**TBD: Answer: In an experiment, we would not have the full schedule of observations. We'll be able to calculate the ATE and then CACE (cace1) by using ATE and the ratio of compliars. Calculating the CACE that way gives us an estimate of .333 which is misleading. **
+**Answer: If we conduct an expriment, with random assignment, the CACE could be misleading as would not represent the actual impact on the compliars. It'll be an incorrect guess based on ITT. A way to fix this issue would be to find out the compliers in both treatment and control by a placebo treatment**
 
 ## c. Which population is more relevant to study for future decision making: the set of Compliers, or the set of Compliers plus Never-Takers? Why?
 
-**Answer: The population of compliers is more important for future decision making. That's where the information on real effect of the treatment comes from.An example would be trying to measure the efficacy of a medicine/pill**
-*There may be some reasons to briefly look at "never takers". It is to get a idea of the ratio of the 2 groups in the overall population. This may be useful in some experiments where we are interested in the "intent to treat" effect instead of the "actual" treatment effect on the treated. Many expriments to influence policy (like rebates for buying health insurance) fall in this category*
+**Answer:The population of compliers is more important for future decision making, if the decision is about the effectiveness of the treatment. That's where the information on real effect of the treatment comes from. An example would be trying to measure the efficacy of a medicine/pill**
+*There may be some reasons to look at "never takers". It is to get a idea of the ratio of the 2 groups in the overall population especially while designing the expriment. The overall population (compliers + never takers) may also be directly useful in some experiments where we are interested in the "intent to treat" effect instead of the "actual" treatment effect on the treated. Many expriments to influence policy (like rebates for buying health insurance) fall in this category.*
 
 ***
 
@@ -153,18 +157,24 @@ Suppose that a researcher hires a group of canvassers to contact a set of 1,000 
 ```{r}
 # Overall turnout rate in the control group
 turn.control <- 700/2000
+print('Turnout rate in control')
 turn.control
+
 # Overall turnout rate in the treatment group
 turn.treat <- 400/1000
+print('Turnout rate in treatment')
 turn.treat
 
+# Effect of intent to treat
 itt <- turn.treat - turn.control
+print('Effect of Intent to treat')
 itt
 
 ```
 ```{r}
 # CACE on assumption that 500 subjects were contacted
 cace1 <- itt/(500/1000)
+print('CACE with assumption that 500 subjects with contacted')
 cace1
 ```
 **Answer: CACE would be .1**
@@ -173,17 +183,18 @@ cace1
 ```{r}
 # CACE on assumption that 250 subjects were contacted
 cace2 <- itt/(250/1000)
+print('CACE with assumption that 250 subjects with contacted')
 cace2
 ```
 **Answer: CACE would be .2 in this case**
 
 ## c. Do the canvassers' exaggerated reports make their efforts seem more or less effective? Define effectiveness either in terms of the ITT or CACE. Why does the definition matter? 
 **Answer: The exaggerated reports make the canvassers' efforts seem less effective. We get a lower estimate for CACE with the exaggerated reports**
-**Effectiveness** can be defined in terms of either ITT or CACE. We could either define it as follows:
-1. +ve value (greater than 0) for the ITT
-2. +ve value for CACE, greater than ITT
+**Effectiveness** can be defined in terms of either ITT or CACE. The definitions could be as follows:
+1. An ITT of greater than 0 i.e. we convert some subjects to vote after just knocking on the doors
+2. A CACE of greater than 0 and greater than ITT i.e we convert sonme subjects to vote after they answer the door
 **The definition matters as it forces us to recognize exactly what we want to measure before the expriment.**
-**In this specific example, we'll concentrate on ITT if we're trying to measure the effectiveness of the intent, i.e. knocking on doors**
+**We'll concentrate on ITT if we're trying to measure the effectiveness of the intent, i.e. knocking on doors**
 **We'll concentrate on CACE if our concern is limited to measure the impact of actually talking to people who open the door**
 **Defining the primary outcome before the experiment would help pick the right metric for measurement**
 
@@ -256,18 +267,23 @@ paste0("ITT with regression: ", lr3$coefficients['treat2'])
 **ITT from difference in means: 0.132**
 **ITT from regression: 0.132 (0.01422)**
 
+```{r}
+# Trying the regression with dormid as a covariate
+lr4 <- lm(turnout ~ treat2 + dormid, data=d3, na.action = na.omit)
+summary(lr4)
+```
 
 ## b. Use randomization inference to test the sharp null hypothesis that the ITT is zero for all observations, taking into account the fact that random assignment was clustered by dorm room. Interpret your results. 
 
 ```{r}
 # Pull out the cluster ID's
 clusters.all <- unique(d3$dormid)
+print('Unique clusters: ')
+head(clusters.all)
 # How many clusters
 clusters.n = length(clusters.all)
+print('Number of unique clusters/DormID: ')
 clusters.n
-```
-```{r}
-head(clusters.all)
 ```
 
 ### Generic functions for cluster randomization and ATE
@@ -300,7 +316,7 @@ d31$treat2 <- randomize.clusters(d31)
 ```
 
 ```{r}
-# Finding out more about the new data set
+# Finding out more about the new data set after one randomization
 clusters <- group_by(d31, dormid)
 clusters.summary <- summarize(clusters, count=n(), mean_y=mean(turnout), mean_treat2=mean(treat2) )
 clusters.summary
@@ -314,7 +330,7 @@ mean(d31$turnout[d31$treat2 == 0])
 nrow(d31)
 d31 <- na.omit(d31)
 nrow(d31)
-
+print('2 rows with NAS removed')
 
 # Now validate
 mean(d31$turnout[d31$treat2 == 1])
@@ -331,16 +347,27 @@ ateR
 # Repeating the expriment 10,000 times
 distribution.under.sharp.null <- replicate(1000, est.ate(d31$turnout, (randomize.clusters(d31))))
 ate.mean <- mean(distribution.under.sharp.null)
-paste0("Mean ITT from 5k randomizations: ", ate.mean)
+paste0("Mean ITT from 1k randomizations: ", ate.mean)
 
 ```
 ```{r}
-# Graph for the estimates
+# Density distribution for the estimates
 plot(density(distribution.under.sharp.null), 
      main = "Density under Sharp Null")
 abline(v = itt.gm, col = "blue")
 ```
-**TODO**
+```{r}
+# Histogram for the estimates
+hist(distribution.under.sharp.null)
+```
+```{r}
+# p value based on the above distribution
+p <- mean(distribution.under.sharp.null >= itt.gm )
+p
+```
+
+
+**Answer: The graphs show that majority of the estimates (under sharp null) lie in range [-.06,  .06]. Our observed ATE (#a) was .132 which does not lie on the graph. We should be able to reject the sharp NULL hypothesis. This validates that our observed impact (via the expriments) is highly unlikely to happen by chance. The intervention in dorms does have a positive influence ~13% on turnout**
 
 ## c. Assume that the leaflet had no effect on turnout. Estimate the CACE. Do this in two ways: First, estimate the CACE using means. Second, use some form of linear model to estimate this as well. If you use a 2SLS, then report the standard errors and draw inference about whether the leaflet had any causal effect among compliers. 
 
@@ -356,7 +383,7 @@ paste0('CACE using means: ', cace.m)
 We'll split treatment into 2 variables for the new linear model:
 1. "contact": This already exists in the data. Its when the door is answered
 2. "leaflet": Generated independent variable (treat2 * !contact). Its when the door is not answered and a leaflet is dropped
-Our model tries to measure the effect of contact and leaflet separately using the regression below
+**The linear model tries to measure the effect of contact and leaflet separately using the regression below**
 
 ```{r}
 # Adding a new variable "leaflet"
@@ -371,18 +398,23 @@ summary(lr33)
 # paste0("ITT with regression: ", lr33$coefficients['treat2', 'contact'])
 ```
 **Answer: CACE using means is 0.14900280951961**  
+
 **The linear model for estimating CACE is as follows: **  
 **turnout = intercept + a(Contact) + b(leaflet) + errors**  
+  
+  
 **We try to find out the impact of contact and leaflet (when there's no contact but a leaflet is dropped) separately**  
-**The coefficients from the model are as follows: **  
+**The coefficients from the model are as follows: **    
 Coefficients:
             Estimate Std. Error t value Pr(>|t|)    
 (Intercept)  0.66867    0.01162  57.526  < 2e-16 ***
 contact      0.13562    0.01452   9.341  < 2e-16 ***
 leaflet      0.10332    0.02687   3.845 0.000123 ***
 
-**We can interpret the coefficient of contact as the CACE: .136 (.0145)**  
-**The model shows that dropping the leaflet as a significant positive effect on the outcome 0.10332 (0.02687).**
+**We can interpret the coefficient of contact as the CACE: .136 (.0145) i.e. the intervention (contact) in dorms has a positive (13%) impact on turnout**  
+
+**The impact of leaflet is: 0.10332 (0.02687)**  
+**The model shows that dropping the leaflet also has a significant positive effect on the outcome 0.10332 (0.02687) i.e. around 10%**
 
 ***
 
@@ -413,6 +445,11 @@ n.treat.c = 486
 n.treat.nt = 2086
 n.placebo.c = 470
 n.placebo.nt = 2109
+n.base.vote = round(n.base * .3122)
+n.treat.c.vote = round(n.treat.c * .3909)
+n.treat.nt.vote = round(n.treat.nt * .3274)
+n.placebo.c.vote = round(n.placebo.c * .2979)
+n.placebo.nt.vote = round(n.placebo.nt * .3215)
 
 # Total number of observations
 n.observations = n.base + n.treat.c + n.treat.nt + n.placebo.nt + n.placebo.c
@@ -427,7 +464,9 @@ df4 <- data.frame(
                   "treatment.nt" = c(rep(0, n.base), rep(0, n.treat.c ), rep(1, n.treat.nt), rep(0, n.observations - n.base - n.treat.c - n.treat.nt)),
                   "placebo.c" = c(rep(0, n.base), rep(0, n.treat.c ), rep(0, n.treat.nt), rep(1, n.placebo.c), rep(0, n.observations - n.base - n.treat.c - n.treat.nt - n.placebo.c )),
                   "placebo.nt" = c(rep(0, n.base), rep(0, n.treat.c ), rep(0, n.treat.nt), rep(0, n.placebo.c), rep(1, n.placebo.nt)),
-                  "vote" = c(rbinom(n.base, 1, .3122), rbinom(n.treat.c, 1, .3909), rbinom(n.treat.nt, 1, .3274), rbinom(n.placebo.c, 1, .2979), rbinom(n.placebo.nt, 1, .3215))
+                  # "vote" = c(rbinom(n.base, 1, .3122), rbinom(n.treat.c, 1, .3909), rbinom(n.treat.nt, 1, .3274), rbinom(n.placebo.c, 1, .2979), rbinom(n.placebo.nt, 1, .3215))
+                  "vote" = c(rep(1, n.base.vote), rep(0, n.base - n.base.vote), rep(1, n.treat.c.vote), rep(0, n.treat.c - n.treat.c.vote), rep(1, n.treat.nt.vote), rep(0, n.treat.nt - n.treat.nt.vote), 
+                             rep(1, n.placebo.c.vote), rep(0, n.placebo.c - n.placebo.c.vote), rep(1, n.placebo.nt.vote), rep(0, n.placebo.nt - n.placebo.nt.vote) )
                   )
 paste0('Total number of rows in the dataframe: ', nrow(df4))
 ```
@@ -436,7 +475,13 @@ paste0('Total number of rows in the dataframe: ', nrow(df4))
 # validation
 head(df4, 10)
 summary(df4)
+mean(df4$vote[df4$baseline == 1])
+mean(df4$vote[df4$treatment.c == 1])
+mean(df4$vote[df4$treatment.nt == 1])
+mean(df4$vote[df4$placebo.c == 1])
+mean(df4$vote[df4$placebo.nt == 1])
 ```
+
 
 ## a. Estimate the proportion of Compliers by using the data on the Treatment group.  Then compute a second estimate of the proportion of Compliers by using the data on the Placebo group.  Are these sample proportions statistically significantly different from each other?  Explain why you would not expect them to be different, given the experimental design. (Hint: ITT_D means "the average effect of the treatment on the dosage of the treatment." I.E., it’s the contact rate $\alpha$ in the async).
 
@@ -457,11 +502,11 @@ paste0("Difference in complier estimate between treatment and placebo group: ", 
 *Estimate of compliers from the placebo group: 0.182241178751454*  
 *Difference in complier estimate between treatment and placebo group: 0.00671683057980568*  
 **The proportions are not significantly different from each other**  
-**TODO We'd not expect them to be different as the groups "treatment", "placebo" are randomly assigned from the same population.**  
+**We'd not expect them to be different as the groups "treatment", "placebo" are randomly assigned from the same population.**  
 
 ## b. Do the data suggest that Never Takers in the treatment and placebo groups have the same rate of turnout? Is this comparison informative?    
 
-**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates that the assignmenet procedure has preserved the comparability of the groups.**  
+**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates that the assignmenet procedure (randomization) has preserved the comparability of the groups.**  
 
 
 ## c. Estimate the CACE of receiving the placebo. Is this estimate consistent with the substantive assumption that the placebo has no effect on turnout?   
@@ -642,10 +687,11 @@ head(d51)
 ```
 ```{r}
 # est.ate(results, treat)
-ate.run.tet1 = est.ate(d51$tetris_diff, d5$run)
-paste0('Effect of running on Tetris score: ', ate.run.tet)
+ate.run.tet1 = est.ate(d51$tetris_diff, d51$run)
+paste0('Effect of running on Tetris score: ', ate.run.tet1)
 ```
-**Answer: Both methods lead to an ATE of 13613.1. Seems running has a positive impact of ~13613 points
+**Answer: The ATE from the first method is 13613.1. Seems running has a positive impact of ~13613 points**
+*The 2nd method gives an ATE estimate of 14341*
 
 ## c. One way to lend credibility to with-subjects results is to verify the no-anticipation assumption. Construct a regression using the variable `run` to predict the `tetris` score *on the preceding day*. Presume that the randomization is fixed. Why is this a test of the no-anticipation assumption? Does a test for no-anticipation confirm this assumption? 
 
@@ -704,9 +750,58 @@ head(d5)
 lr5g = lm(tetris~run + run_lag, data=d5, na.action = na.omit)
 summary(lr5g)
 ```
-**Answer: The coefficient of run in this regression is 14785.8(4961.9). The coefficient in "d" was 13613 (4856). Both the coefficient and the SE increases by ~10%. This differnece is 1/3rd the standard error and does not look significant.**  
+**Answer: The coefficient of run in this regression is 14785.8(4961.9). The coefficient in "d" was 13613 (4856). Both the coefficient and the SE increases by ~10%. This difference is 1/3rd the standard error and does not look significant.**  
 **Previous days' run does not show the same impact as today's run on the tetris score**
 
 #h. (optional) Note that the observations in our regression are not necessarily independent of each other. An individual might have serially correlated outcomes, regardless of treatment.  For example, I might find that my mood is better on weekends than on weekdays, or I might find that I'm terrible at playing Tetris in the few days before a paper is due, but I get better at the game once my stress level has lowered. In computing standard errors for a regression, OLS assumes that the observations are all independent of each other.  If they are positively serially correlated, it's possible that OLS will underestimate the standard errors.
 
 To check this, let's do randomization inference in the regression context.  Recall that the idea of randomization inference is that under the sharp null hypothesis, we can re-randomize, recompute the ATE, and get approximately the right answer (zero) for the treatment effect.  So, returning to the regression we ran in part (g), please generate 1000 new randomizations of the `run` variable, use those to replace the current and lagged values of `run` in your dataset, then run the regression again.  Record the coefficient you get on the contemporaneous value of `run`, and repeat this re-randomization exercise 1000 times.  Plot the distribution of beta. What are the 2.5% and 97.5% quantiles?  How do they compare with the width of the 95% confidence interval you got for your main `run` coefficient in the regression in part (g)?
+
+```{r}
+# Trying a randomization of the run variable, calculating lag and then repeating the regression
+
+# Creating new variables for randomizing run and run_lag
+d5$run_rnd = sample(d5$run)
+d5$run_lag_rnd = lag(d5$run_rnd)
+head(d5)
+tail(d5)
+```
+```{r}
+# Running the regression with the new randomization
+# Regression on run for current and previous day
+lr5h = lm(tetris~run_rnd + run_lag_rnd, data=d5, na.action = na.omit)
+summary(lr5h)
+```
+
+*The effect of running is not significant for this randomization*
+
+```{r}
+# Generic function to randomly(pseudo) pick the cluster ID's
+coeff_run <- function(d) {
+  d$run_rnd = sample(d$run)
+  d$run_lag_rnd = lag(d$run_rnd)
+  lrh = lm(tetris~run_rnd + run_lag_rnd, data=d, na.action = na.omit)
+  return(lrh$coefficients['run_rnd'])
+}
+
+# Trying another randomization
+coeff_run(d5)
+```
+```{r}
+# 1K Randomizations
+h.distribution.under.sharp.null <- replicate(1000, coeff_run(d5))
+h.ate.mean <- mean(h.distribution.under.sharp.null)
+paste0("Mean ITT fromm 1k randomizations: ", h.ate.mean)
+
+```
+
+```{r}
+# Graph for the estimates
+plot(density(h.distribution.under.sharp.null), 
+     main = "Density under Sharp Null")
+
+# Adding our original ATE to the plot
+abline(v = ate.run.tet, col = "blue")
+```
+
+
