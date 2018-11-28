@@ -79,7 +79,8 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 ***
-# 1. Potential Outcomes 
+# 1. Potential Outcomes  
+
 ## a. Make up a hypothetical schedule of potential outcomes for three Compliers and three Never-Takers where the ATE is positive but the CACE is negative. By ATE, we mean the average treatment effect for the entire population, including both compliers and never-takers.  Note that we can never compute this ATE directly in practice, because we never observe both potential outcomes for any individual, especially for never-takers. That's why this question requires you to provide a complete table of hypothetical potential outcomes for all six subjects.
 
 ```{r}
@@ -107,7 +108,7 @@ exp.df
 
 ```
 
-**The hypothetical schedule is above**
+**Answer: The hypothetical schedule is created above**
 
 ```{r}
 # Calculations for ATE & CACE
@@ -141,7 +142,7 @@ exp.cace1
 ```
 ## b. Suppose that an experiment were conducted on your pool of subjects. In what ways would the estimated CACE be informative or misleading? 
 
-**Answer: If we conduct an expriment, with random assignment, the CACE could be misleading as would not represent the actual impact on the compliars. It'll be an incorrect guess based on ITT. A way to fix this issue would be to find out the compliers in both treatment and control by a placebo treatment**
+**Answer: If we conduct an expriment, with random assignment, the CACE could be misleading as would not represent the actual impact on the compliars. It'll be an incorrect guess based on ITT which assumes that the compliers and not takers are alike. A way to fix this issue would be to estimate the compliers in both treatment and control with a placebo treatment**
 
 ## c. Which population is more relevant to study for future decision making: the set of Compliers, or the set of Compliers plus Never-Takers? Why?
 
@@ -177,7 +178,7 @@ cace1 <- itt/(500/1000)
 print('CACE with assumption that 500 subjects with contacted')
 cace1
 ```
-**Answer: CACE would be .1**
+**Answer: CACE, on assumption that 500 subjects were contacted, would be .1**
 
 ## b. Suppose you learned that only 250 subjects were actually treated. What would your estimate of the CACE be? 
 ```{r}
@@ -212,11 +213,7 @@ head(d3, 20)
 # Finding more about the data
 nrow(d3)
 summary(d3)
-```
-```{r}
-# plot of "treatment" for dorm ID's
-plot(d3$dormid, d3$treat2)
-```
+```  
 
 ## a. Using the data set from the book's website, estimate the ITT. First, estimate the ITT using the difference in two-group means. Then, estimate the ITT using a linear regression on the appropriate subset of data. *Heads up: There are two NAs in the data frame. Just na.omit to remove these rows.*
 
@@ -267,18 +264,13 @@ paste0("ITT with regression: ", lr3$coefficients['treat2'])
 **ITT from difference in means: 0.132**
 **ITT from regression: 0.132 (0.01422)**
 
-```{r}
-# Trying the regression with dormid as a covariate
-lr4 <- lm(turnout ~ treat2 + dormid, data=d3, na.action = na.omit)
-summary(lr4)
-```
 
 ## b. Use randomization inference to test the sharp null hypothesis that the ITT is zero for all observations, taking into account the fact that random assignment was clustered by dorm room. Interpret your results. 
 
 ```{r}
 # Pull out the cluster ID's
 clusters.all <- unique(d3$dormid)
-print('Unique clusters: ')
+print('Head-Unique clusters: ')
 head(clusters.all)
 # How many clusters
 clusters.n = length(clusters.all)
@@ -321,6 +313,7 @@ clusters <- group_by(d31, dormid)
 clusters.summary <- summarize(clusters, count=n(), mean_y=mean(turnout), mean_treat2=mean(treat2) )
 clusters.summary
 ```
+###Validating the data after randomization
 ```{r}
 # Validating the data
 mean(d31$turnout[d31$treat2 == 1])
@@ -340,8 +333,10 @@ mean(d31$turnout[d31$treat2 == 0])
 ```{r}
 # ATE for one randomization
 ateR <- est.ate(d31$turnout, d31$treat2)
+paste0('ATE with one randomization: ', ateR)
 ateR
 ```
+### 1K Randomizations
 ```{r}
 # 1K Randomizations
 # Repeating the expriment 10,000 times
@@ -380,7 +375,7 @@ paste0('CACE using means: ', cace.m)
 ```
 ### CACE using a linear model
 
-We'll split treatment into 2 variables for the new linear model:
+### We'll split treatment variable into 2 variables for the new linear model:
 1. "contact": This already exists in the data. Its when the door is answered
 2. "leaflet": Generated independent variable (treat2 * !contact). Its when the door is not answered and a leaflet is dropped
 **The linear model tries to measure the effect of contact and leaflet separately using the regression below**
@@ -388,6 +383,7 @@ We'll split treatment into 2 variables for the new linear model:
 ```{r}
 # Adding a new variable "leaflet"
 d3$leaflet <- d3$treat2 * !d3$contact
+print('Data with the new variable LEAFLET')
 head(d3, 20)
 summary(d3)
 ```
@@ -400,7 +396,7 @@ summary(lr33)
 **Answer: CACE using means is 0.14900280951961**  
 
 **The linear model for estimating CACE is as follows: **  
-**turnout = intercept + a(Contact) + b(leaflet) + errors**  
+**turnout = intercept + ALPHA(Contact) + BETA(leaflet) + errors**  
   
   
 **We try to find out the impact of contact and leaflet (when there's no contact but a leaflet is dropped) separately**  
@@ -470,7 +466,7 @@ df4 <- data.frame(
                   )
 paste0('Total number of rows in the dataframe: ', nrow(df4))
 ```
-
+### Validating the generated data. Means of 'vote' variable should match 'turn' out from the aggregate data
 ```{r}
 # validation
 head(df4, 10)
@@ -481,7 +477,7 @@ mean(df4$vote[df4$treatment.nt == 1])
 mean(df4$vote[df4$placebo.c == 1])
 mean(df4$vote[df4$placebo.nt == 1])
 ```
-
+*And they match.*
 
 ## a. Estimate the proportion of Compliers by using the data on the Treatment group.  Then compute a second estimate of the proportion of Compliers by using the data on the Placebo group.  Are these sample proportions statistically significantly different from each other?  Explain why you would not expect them to be different, given the experimental design. (Hint: ITT_D means "the average effect of the treatment on the dosage of the treatment." I.E., it’s the contact rate $\alpha$ in the async).
 
@@ -501,12 +497,18 @@ paste0("Difference in complier estimate between treatment and placebo group: ", 
 *Estimate of compliers from the treatment group: 0.18895800933126*  
 *Estimate of compliers from the placebo group: 0.182241178751454*  
 *Difference in complier estimate between treatment and placebo group: 0.00671683057980568*  
+
 **The proportions are not significantly different from each other**  
 **We'd not expect them to be different as the groups "treatment", "placebo" are randomly assigned from the same population.**  
 
 ## b. Do the data suggest that Never Takers in the treatment and placebo groups have the same rate of turnout? Is this comparison informative?    
 
-**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates that the assignmenet procedure (randomization) has preserved the comparability of the groups.**  
+*Treatment            | No        | 2086 | 32.74%  |*
+*Placebo              | No        | 2109 | 32.15%  |*
+
+**Answer: Yes, the data suggests that Never Takers in treatment and placebo groups have the same rate of turnout. Yes, the comparison is informative. It validates the following:**
+1. The assignmenet procedure (randomization) has preserved the comparability of the groups
+2. The Never takers in the 2 groups behave similarly in the absence of an intervention i.e. the assignment has managed to randomize the impacts of any co-variates 
 
 
 ## c. Estimate the CACE of receiving the placebo. Is this estimate consistent with the substantive assumption that the placebo has no effect on turnout?   
@@ -530,7 +532,7 @@ placebo.cace = placebo.itt/est.compl.placebo
 paste0('CACE for the placebo group: ', placebo.cace)
 ```
 
-**Answer: The CACE estimate from the placebo groupo is .027 (~2.7%). This supports our assuption that the placebo has little to no effect on the turnout**  
+**Answer: The CACE estimate from the placebo groupo is .027 (~2.7%). With the baseline of 31%, this change does not look significant and could support our assuption that the placebo has little to no effect on the turnout. We cannot be sure though without investigating the errors or the confidence interval**
 
 ## d. Estimate the CACE of receiving the treatment using two different methods. First, use the conventional method of dividing the ITT by the ITT_{D}. (This should be a treatment vs. control comparison.)
 
@@ -564,14 +566,15 @@ treat.cace1 = .39 - .2979
 paste0('CACE for the treatment group by comparing with compliers in placebo group: ', treat.cace1)
 
 ```
-**Answer: CACE for the treatment group by comparing with compliers in placebo group is 0.0921. A 9.2% uplift in the turnout is significant with respect to the baseline turnout (31.22%). It means that ~9.2% more folks show up for voting from the group that answers the door, and gets the encouragement to vote, when compared to folks that answer the door but do not get the encouragement to vote (instead they get encouragement to recycle) **  
+**Answer: CACE for the treatment group by comparing with compliers in placebo group is 0.0921.**  
+**A 9.2% uplift in the turnout is significant with respect to the baseline turnout (31.22%). It means that ~9.2% more folks show up for voting from the group that answers the door, and gets the encouragement to vote, when compared to folks that answer the door but do not get the encouragement to vote (instead they get encouragement to recycle) **  
 *This estimate is lower than what we get from the ITT/ITT_d method. The ITT/ITT_d method over-estimates the CACE as it ignores the differences among the compliers and never takers.*
 
 
 ## f. Based on what we talked about in class -- that the rate of compliance determines whether one or another design is more efficient -- given the compliance rate in this study, which design *should* provide a more efficient estimate of the treatment effect? If you want to review the specific paper that makes this claim, check out [this link](https://github.com/UCB-MIDS/experiments-causality/blob/master/readings/GerberGreenKaplanKern.2010.pdf). Does it?  
 
-**Answer: The rate of complience in this study is ~18%, close to the 20% line in Fig 3 [GerberGreenKaplanKern.2010]. At this rate of complience, its noted in the paper (Fig 3) that assigning 40% of the subjects to Placebo group creates the most efficient design**
-**TBD: Does it?**
+**Answer: The rate of complience in this study is ~18% from both the treatment and the placebo groups, close to the 20% line in Fig 3 [GerberGreenKaplanKern.2010]. At this rate of complience, its noted in the paper (Fig 3) that assigning 40% of the subjects to Placebo group creates the most efficient design**
+**Our calculations above show that commparing with the placebo group gives a different estimate than comparing with the baseline. The takeaway is that that there's a difference among compliers and not takers that we cannot ignore i.e. comparing with the baseline would not give us an accurate result. A design that compares compliers is necessary and "placebo" treatment seems like a good choice in this specific case. The cost of delivering the placebo is not much different than delivering the treatment, but the accuracy increases when compared to an experiment where we just distribute the placebo group among treatment and baseline**
 
 
 <!--
@@ -648,7 +651,15 @@ p5 <- ggplot(d5, aes(x=day, y=tetris)) +
 multiplot(p1, p2, p3, p4, p5, cols=3)
 ```
 
-## a. Suppose you were seeking to estimate the average effect of running on her Tetris score. Explain the assumptions needed to identify this causal effect based on this within-subjects design. Are these assumptions plausible in this case? What special concerns arise due to the fact that the subject was conducting the study, undergoing the treatments, and measuring her own outcomes? 
+## a. Suppose you were seeking to estimate the average effect of running on her Tetris score. Explain the assumptions needed to identify this causal effect based on this within-subjects design. Are these assumptions plausible in this case? What special concerns arise due to the fact that the subject was conducting the study, undergoing the treatments, and measuring her own outcomes?   
+
+**We'll have to make the following assumptions: **  
+1. **"No Anticipation":** The student's tetris scores and other variables are not influenced by the anticipation of upcoming run. Yes, this assumption is plausibe with self control and mental descipline on part of the student (like not consuming more carbs to pepare for the run or controlling the anxiety/thrill of the upcoming walk/run)
+2. **"No Persistence (or no spillover)":** The student's run on one day does not impact the scores and other variables in the future. This does not look very plausible. Science says that the impact of exercise and diet are cumulative. If its really true that the scores are impacted by exercise, then the connection should persist for a while.
+
+**There's concerns around the subject conducting the study on herself: **
+1. **"No Anticipation"** becomes really hard to pull off. The mental boost of anticipating an enjoyable walk or eating more to prepare would be hard to ignore. A better expriment is done with student not being informed of the upcomign treatment(run)
+2. The accuracy of account keeping (taking scores, walk times etc) is also suspect with the subject being the experimenter. The bookkeeping rigor may or may not be present
 
 ## b. Estimate the effect of running today on Tetris score. What is the ATE?  
 *One way to find the ATE would be to compare the means for days when the student does or does not run*
@@ -702,10 +713,11 @@ head(d5)
 ```
 ```{r}
 # Regression to predict tetris score on the preceding day
-lr5c <- lm(tetris_lag ~ run + tetris + day, data=d5, na.action = na.omit)
+lr5c <- lm(tetris_lag ~ run, data=d5, na.action = na.omit)
 summary(lr5c)
 ```
-**Answer: TBD**
+**The coefficient of run  is (450.8) 4861.6, which is not significant (practically and statisticaly). We can conclude that data does not show any effect of anticipation**
+**The model tests if next day's run influences the tetris scores for the day i.e. if there's an impact of anticipating the run. Yes, it tests the "no-anticipation" assumption. yes, we can confirm that the assumption holds based on the results**
 
 ## d. Now let's use regression to put a standard error on our ATE estimate from part (b). Regress Tetris score on the the variable `run`, this time using the current rather than the future value of `run`.  Is the impact on Tetris score statistically significant? 
 ```{r}
@@ -714,7 +726,7 @@ lr5d = lm(tetris~run, data=d5, na.action = na.omit)
 summary(lr5d)
 
 ```
-**Answer: We see an ATE (coefficient of run) = 13613 (4856). Yes, the impact of run on tetris is statistically significant.**
+**Answer: We see an ATE (coefficient of run) = 13613 (4856). Yes, the impact of run on tetris is statistically significant (ATE is > 2 SE's).**
 
 ## e. If Tetris responds to exercise, one might suppose that energy levels and GRE scores would as well. Are these hypotheses borne out by the data? 
 ```{r}
@@ -737,7 +749,8 @@ summary(lr5e1)
 
 ## f. Suppose the student decides to publish her results on Tetris, since she finds those most interesting.  In the paper she writes, she chooses to be concise by ignoring the data she collected on energy levels and GRE scores, since she finds those results less interesting.  How might you criticize the student's decision?  What trap may she have fallen into?
 
-**TBD**
+**Answer: One can say that the student cherry picked the outcome variable that showed statistical significance. She designed the experiment for multiple outcome measurements(scores, GRE results, energy etc), so an honest report would present the result for all. Looking at all the outcome measurements, one can conclude that the effect on any one could be by chance or not**  
+**The student may be doing a form of "p hacking" or data dredging just by ignorance. With multiple outcomes measurements, a small % (1 in 20) may show statistical significance just by chance. Tetris scores could be that variable. She can avoid this trap by looking at the result of "Tetris scores" in the context of similar measurements like "energy" and "GRE results"**
 
 ## g. After submitting her paper to a journal, the student thinks of another hypothesis.  What if running has a relatively long-lasting effect on Tetris scores?  Perhaps both today's running and yesterday's running will affect Tetris scores.  Run a regression of today's Tetris score on both today's `run` variable and yesterday's `run` variable.  How does your coefficient on running today compare with what you found in part (d)?  How do you interpret this comparison?
 ```{r}
@@ -749,9 +762,12 @@ head(d5)
 # Regression on run for current and previous day
 lr5g = lm(tetris~run + run_lag, data=d5, na.action = na.omit)
 summary(lr5g)
+
+confint(lr5g, "run", level=.95)
+confint(lr5g, "run_lag", level=.95)
 ```
 **Answer: The coefficient of run in this regression is 14785.8(4961.9). The coefficient in "d" was 13613 (4856). Both the coefficient and the SE increases by ~10%. This difference is 1/3rd the standard error and does not look significant.**  
-**Previous days' run does not show the same impact as today's run on the tetris score**
+**An interpretation of the regression is that previous days' run does not have a significant impact on Tetris scores. This can be a validation for our "no persistence" assumption.**
 
 #h. (optional) Note that the observations in our regression are not necessarily independent of each other. An individual might have serially correlated outcomes, regardless of treatment.  For example, I might find that my mood is better on weekends than on weekdays, or I might find that I'm terrible at playing Tetris in the few days before a paper is due, but I get better at the game once my stress level has lowered. In computing standard errors for a regression, OLS assumes that the observations are all independent of each other.  If they are positively serially correlated, it's possible that OLS will underestimate the standard errors.
 
@@ -803,5 +819,32 @@ plot(density(h.distribution.under.sharp.null),
 # Adding our original ATE to the plot
 abline(v = ate.run.tet, col = "blue")
 ```
+```{r}
+# p value
+pv = mean(h.distribution.under.sharp.null >= ate.run.tet)
+paste0('p value: ', pv)
+```
+```{r}
+# num of assignments that generate an estimated ATE at least as large as the actual
+n <- sum(h.distribution.under.sharp.null >= ate.run.tet)
+paste0("Number of assignments that generate an ATE at least as large as what we got from the experiment: ", n)
+```
+
+### This does show that our results from the experiment are not easily reproducible by chance
+
+```{r}
+# Standard error
+se = sd(h.distribution.under.sharp.null)/sqrt(length(h.distribution.under.sharp.null))
+paste0('Standard error: ', se)
+                                             
+                                            
+```
+```{r}
+# 2.5 and 97.5 quantiles
+cint = c(h.ate.mean - 2*se, h.ate.mean + 2*se)
+cint
 
 
+```
+
+**This is a much tighter confidence interval(almost 1/10 of the one we get from the experiment) and does not include the ATE for run from the experiment. Our takeaway could be that the results from the experiment cannot happen by chance**
