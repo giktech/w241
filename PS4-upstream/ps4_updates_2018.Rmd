@@ -108,7 +108,7 @@ exp.df
 
 ```
 
-**Answer: The hypothetical schedule is created above**
+**Answer: The hypothetical schedule is created above**  
 
 ```{r}
 # Calculations for ATE & CACE
@@ -654,12 +654,12 @@ multiplot(p1, p2, p3, p4, p5, cols=3)
 ## a. Suppose you were seeking to estimate the average effect of running on her Tetris score. Explain the assumptions needed to identify this causal effect based on this within-subjects design. Are these assumptions plausible in this case? What special concerns arise due to the fact that the subject was conducting the study, undergoing the treatments, and measuring her own outcomes?   
 
 **We'll have to make the following assumptions: **  
-1. **"No Anticipation":** The student's tetris scores and other variables are not influenced by the anticipation of upcoming run. Yes, this assumption is plausibe with self control and mental descipline on part of the student (like not consuming more carbs to pepare for the run or controlling the anxiety/thrill of the upcoming walk/run)
-2. **"No Persistence (or no spillover)":** The student's run on one day does not impact the scores and other variables in the future. This does not look very plausible. Science says that the impact of exercise and diet are cumulative. If its really true that the scores are impacted by exercise, then the connection should persist for a while.
+1. **"No Anticipation":** The student's tetris scores and other variables are not influenced by the anticipation of upcoming run. Yes, this assumption is plausibe with self control and mental descipline on part of the student (like not consuming more carbs to pepare for the run or controlling the anxiety/thrill of the upcoming walk/run)**  
+2. **"No Persistence (or no spillover)":** The student's run on one day does not impact the scores and other variables in the future. This does not look very plausible. Science says that the impact of exercise and diet are cumulative. If its really true that the scores are impacted by exercise, then the connection should persist for a while.**  
 
 **There's concerns around the subject conducting the study on herself: **
-1. **"No Anticipation"** becomes really hard to pull off. The mental boost of anticipating an enjoyable walk or eating more to prepare would be hard to ignore. A better expriment is done with student not being informed of the upcomign treatment(run)
-2. The accuracy of account keeping (taking scores, walk times etc) is also suspect with the subject being the experimenter. The bookkeeping rigor may or may not be present
+1. **"No Anticipation"** becomes really hard to pull off. The mental boost of anticipating an enjoyable walk or eating more to prepare would be hard to ignore. A better expriment is done with student not being informed of the upcomign treatment(run)  
+2. **The accuracy of account keeping** (taking scores, walk times etc) is also suspect with the subject being the experimenter. The bookkeeping rigor may or may not be present
 
 ## b. Estimate the effect of running today on Tetris score. What is the ATE?  
 *One way to find the ATE would be to compare the means for days when the student does or does not run*
@@ -716,7 +716,7 @@ head(d5)
 lr5c <- lm(tetris_lag ~ run, data=d5, na.action = na.omit)
 summary(lr5c)
 ```
-**The coefficient of run  is (450.8) 4861.6, which is not significant (practically and statisticaly). We can conclude that data does not show any effect of anticipation**
+**Answer: The coefficient of run  is (450.8) 4861.6, which is not significant (practically and statisticaly). We can conclude that data does not show any effect of anticipation**
 **The model tests if next day's run influences the tetris scores for the day i.e. if there's an impact of anticipating the run. Yes, it tests the "no-anticipation" assumption. yes, we can confirm that the assumption holds based on the results**
 
 ## d. Now let's use regression to put a standard error on our ATE estimate from part (b). Regress Tetris score on the the variable `run`, this time using the current rather than the future value of `run`.  Is the impact on Tetris score statistically significant? 
