@@ -21,11 +21,25 @@ Imagine you are an advertiser who has purchased advertising from Yahoo! that is 
 library(data.table)
 library(stargazer)
 library(dplyr)
+library(COUNT)
+```
+```{r}
+# Libraries for robust and clustered standard errors
+library(lmtest)
+library(sandwich)
+library(multiwayvcov)
+library(stargazer)
+```
 
+```{r}
 d1 <- fread('./data/ps5_no1.csv')
 d1
 ```
 
+### A summary of the data
+```{r, message=FALSE}
+summary(d1)
+```
 
 The variables in the dataset are described below:
 
@@ -45,9 +59,54 @@ Simplifying assumptions you should make when answering this problem:
 
 ## Questions to Answer 
 
-a. Run a crosstab of total_ad_exposures_week1 and treatment_ad_exposures_week1 to sanity check that the distribution of impressions looks as it should. Does it seem reasonable? Why does it look like this? (No computation required here, just a brief verbal response.)
-b. Your colleague proposes the code printed below to analyze this experiment: 
+## a. Run a crosstab of total_ad_exposures_week1 and treatment_ad_exposures_week1 to sanity check that the distribution of impressions looks as it should. Does it seem reasonable? Why does it look like this? (No computation required here, just a brief verbal response.)
+
+```{r}
+# Histograms for treatment_ad_exposures_week1 & total_ad_exposures_week1
+hist(d1$total_ad_exposures_week1,  ylim = c(0, 160000), col = "blue", border = F, main = "total_ad_exposures_week1", xlab = "Number of ad exposures during the campaign", density=30, angle = 120)
+hist(d1$treatment_ad_exposures_week1, ylim = c(0, 160000), col= "red", add=T, density = 40)
+legend('topright',c('Total ad exposures in week 1','Treatment ad exposures in week 1'),
+       fill = c("blue", "red"), bty = 'n',
+       border = NA)
+
+```
+```{r}
+# Crosstabs and other calculations
+paste0("Total ad exposures: ")
+table(d1$total_ad_exposures_week1)
+paste0("Treatment ad exposures: ")
+table(d1$treatment_ad_exposures_week1)
+mte = sum(d1$total_ad_exposures_week1/nrow(d1))
+paste0('Mean number of total exposures: ', mte )
+mtt = sum(d1$treatment_ad_exposures_week1/nrow(d1))
+paste0('Mean number of treatment exposures: ', mtt )
+```
+**Answer: TBD The distribution seems reasonable. Everyone in the study as 0-6 exposures to any ad. The distribution looks normal. Each of the exposure could be on an even or odd second. On even second a participant would see the "treatment" ad**
+
+## b. Your colleague proposes the code printed below to analyze this experiment: 
 `lm(week1 ~ treatment_ad_exposures_week1, data)` You are suspicious. Run a placebo test with the prior week’s purchases as the outcome and report the results. Did the placebo test “succeed” or “fail”? Why do you say so?
+
+### Running the friend's code
+```{r}
+lr1b = lm(week1 ~ treatment_ad_exposures_week1, data = d1)
+summary(lr1b)
+```
+### We are suspicious. Running a placebo test. First picking folks who saw no treatment ads but saw other ads as the placebo group
+```{r}
+# Picking people with 0 treatment ad exposure but > 0 total add exposure
+d1b = d1[which(d1$treatment_ad_exposures_week1 == 0 & d1$total_ad_exposures_week1 > 0),]
+paste0("Number of folks with no treatment ad exposure: ", nrow(d1b))
+paste0("ratio of folks with no treatment ad exposure: ", nrow(d1b)/nrow(d1))
+# head(d1b)
+# summary(d1b)
+```
+### Running a Regression with prior week's revenue as the outcome
+```{r}
+lr1b1 = lm(week0 ~ total_ad_exposures_week1, data = d1b)
+summary(lr1b1)
+```
+
+
 c. The placebo test suggests that there is something wrong with our experiment or our data analysis. We suggest looking for a problem with the data analysis. Do you see something that might be spoiling the randomness of the treatment variable? How can you improve your analysis to get rid of this problem? Why does the placebo test turn out the way it does? What one thing needs to be done to analyze the data correctly? Please provide a brief explanation of why, not just what needs to be done. (*Note: This question, and verifying that you answered it correctly in part d below, may require some thinking. If we find many people can’t figure it out, we will post another hint in a few days.*)
 d. Implement the procedure you propose from part (c), run the placebo test for the Week 0 data again, and report the results. (This placebo test should pass; if it does not, re-evaluate your strategy before wasting time proceeding.)
 e. Now estimate the causal effect of each ad exposure on purchases during the week of the campaign itself using the same technique that passed the placebo test in part (d).
@@ -77,22 +136,125 @@ Some simplifying assumptions:
 + Assume that the true effect of education on income is linear in the number of years of education obtained.
 + Assume all the data points are from Americans born in a single year and we do not need to worry about cohort effects of any kind.
 
+### Getting the data
+```{r}
+d2 <- fread('./data/ps5_no2.csv')
+head(d2)
+```
+```{r}
+summary(d2)
+```
+
+
 ## Questions to Answer
 
-a. Suppose that you had not run an experiment. Estimate the "effect" of each year of education on income as an observational researcher might, by just running a regression of years of education on income (in R-ish, `income ~ years_education`). What does this naive regression suggest?
-b. Continue to suppose that we did not run the experiment, but that we saw the result that you noted in part (a). Tell a concrete story about why you don't believe that observational result tells you anything causal. 
-c. Now, let’s get to using the natural experiment. We will define “having a high-ranked draft number” as having a draft number of 80 or below (1-80; numbers 81-365, for the remaining 285 days of the year, can be considered “low-ranked”). Create a variable in your dataset indicating whether each person has a high-ranked draft number or not. Using regression, estimate the effect of having a high-ranked draft number, the dummy variable you’ve just created, on years of education obtained. Report the estimate and a correctly computed standard error. (*Hint: Pay special attention to calculating the correct standard errors here. They should match how the draft is conducted.)
-d. Using linear regression, estimate the effect of having a high-ranked draft number on income. Report the estimate and the correct standard error.
-e. Divide the estimate from part (d) by the estimate in part (c) to estimate the effect of education on income. This is an instrumental-variables estimate, in which we are looking at the “clean” variation in both education and income that is due to the draft status, and computing the slope of the income-education line as “clean change in Y” divided by “clean change in X”. What do the results suggest?
-f. Natural experiments rely crucially on the “exclusion restriction” assumption that the instrument (here, having a high draft rank) cannot affect the outcome (here, income) in any other way except through its effect on the “endogenous variable” (here, education). Give one reason this assumption may be violated -- that is, why having a high draft rank could affect individuals’ income other than because it nudges them to attend school for longer.
-g. Conduct a test for the presence of differential attrition by treatment condition. That is, conduct a formal test of the hypothesis that the “high-ranked draft number” treatment has no effect on whether we observe a person’s income. (Note, that an earning of $0 *actually* means they didn't earn any money.)
+## a. Suppose that you had not run an experiment. Estimate the "effect" of each year of education on income as an observational researcher might, by just running a regression of years of education on income (in R-ish, `income ~ years_education`). What does this naive regression suggest?
+
+### Running a naive regression
+```{r}
+lr2a = lm(income ~ years_education, data = d2)
+summary(lr2a)
+```
+**Answer: The naive regressions suggests that every  year of additional education causes a $5750.48(83.34) bump in income. The regression also shows a very confident result and significant result (the SE is almost 1/50th of the impact)**
+
+
+## b. Continue to suppose that we did not run the experiment, but that we saw the result that you noted in part (a). Tell a concrete story about why you don't believe that observational result tells you anything causal.  
+
+**Answer: A story could be that "years of education" is not really a cause, but an effect of other causal factors like wealth in the family, education in the family and the environment. These causal factors have a positive impact on wealth and "years of education" in a very similar way. An example could be a teenager raised in an academic family that also provides seed funds to startups. This teenager would be expected to go to college and can also use some of the family wealth and connections to create more**
+
+
+## c. Now, let’s get to using the natural experiment. We will define “having a high-ranked draft number” as having a draft number of 80 or below (1-80; numbers 81-365, for the remaining 285 days of the year, can be considered “low-ranked”). Create a variable in your dataset indicating whether each person has a high-ranked draft number or not. Using regression, estimate the effect of having a high-ranked draft number, the dummy variable you’ve just created, on years of education obtained. Report the estimate and a correctly computed standard error. (*Hint: Pay special attention to calculating the correct standard errors here. They should match how the draft is conducted.)
+
+## Adding the instrument variable (high_draft)  
+```{r}
+d2$high_draft = as.numeric(d2$draft_number <= 80)
+head(d2, 40)
+summary(d2)
+```
+### The distribution of high_draft  
+```{r}
+hist(d2$high_draft)
+```
+
+### Effect of high draft on the years of education    
+```{r}
+lr2c = lm(years_education ~ high_draft, data=d2)
+summary(lr2c)
+```
+### Cluster SE's may be more appropriate in this situation. The draft_number is the cluster of all men in a certain birthdate range  
+```{r}
+lr2c$cluster.vcov <- cluster.vcov(lr2c, ~ draft_number)
+coeftest(lr2c, lr2c$cluster.vcov)
+# Cluster standard errors
+lr2c$cluster.se <- sqrt(diag(lr2c$cluster.vcov))
+paste0('Cluster SEs: ', lr2c$cluster.se)
+```
+**Answer: The effect of high draft number is 2.125(.03818) additional years of education**  
+
+## d. Using linear regression, estimate the effect of having a high-ranked draft number on income. Report the estimate and the correct standard error.
+```{r}
+# Regression of income on high ranked draft number
+lr2d = lm(income ~ high_draft, data=d2)
+summary(lr2d)
+lr2d$cluster.vcov <- cluster.vcov(lr2d, ~ draft_number)
+coeftest(lr2d, lr2d$cluster.vcov)
+# Cluster standard errors
+lr2d$cluster.se <- sqrt(diag(lr2d$cluster.vcov))
+paste0('Cluster SEs: ', lr2d$cluster.se)
+
+```
+**Answer: The estimate is 6637.55(511.90)**
+
+## e. Divide the estimate from part (d) by the estimate in part (c) to estimate the effect of education on income. This is an instrumental-variables estimate, in which we are looking at the “clean” variation in both education and income that is due to the draft status, and computing the slope of the income-education line as “clean change in Y” divided by “clean change in X”. What do the results suggest?
+```{r}
+# Effect of education on income
+eI = 6637.55/2.125
+paste0("The impact of education on income: ", eI)
+
+```
+**Answer: The result suggest that each year of education has an impact of adding $3123.55 to the income. This is less than the estimate we got from the naive regression (regression of income on education without considering the instrument)**
+
+## f. Natural experiments rely crucially on the “exclusion restriction” assumption that the instrument (here, having a high draft rank) cannot affect the outcome (here, income) in any other way except through its effect on the “endogenous variable” (here, education). Give one reason this assumption may be violated -- that is, why having a high draft rank could affect individuals’ income other than because it nudges them to attend school for longer.
+**TB
+D**
+## g. Conduct a test for the presence of differential attrition by treatment condition. That is, conduct a formal test of the hypothesis that the “high-ranked draft number” treatment has no effect on whether we observe a person’s income. (Note, that an earning of $0 *actually* means they didn't earn any money.)
+
+### We could test if the observations differ greatly between the treatment and control groups
+```{r}
+d2g = group_by(d2,high_draft)
+summarise(d2g, count=n())
+hist(d2$high_draft)
+```
+**We have 5 times the number of observations in control. This could be concerning**  
+
+### Lets look at the distribution of income in control and treatment
+```{r}
+# Histograms 
+hist(d2[which(d2$high_draft == 1) ,]$income,  ylim = c(0, 4500), col = "red", border = F, main = "Distribution of income with draft numbers", xlab = "Income", density=40, angle = 120)
+hist(d2[which(d2$high_draft == 0),]$income, ylim = c(0, 4500), col= "blue", add=T, density = 10)
+legend('topright',c('High draft numbers','Low draft numbers'),
+       fill = c("red", "blue"), bty = 'n',
+       border = NA)
+
+```
+** A skew towards lower income in both the groups**
+
+### Distribution of years_education in control and treatment
+```{r}
+# Histograms 
+hist(d2[which(d2$high_draft == 1) ,]$years_education,  ylim = c(0, 4500), col = "red", border = F, main = "Distribution of year_education with draft numbers", xlab = "Years of Education", density=40, angle = 120)
+hist(d2[which(d2$high_draft == 0),]$years_education, ylim = c(0, 4500), col= "blue", add=T, density = 10)
+legend('topright',c('High draft numbers','Low draft numbers'),
+       fill = c("red", "blue"), bty = 'n',
+       border = NA)
+```
+**We see the skew towards higher education in our sample of High draft numbers**
+
+**Answer: The vast difference in the number of observations for low draft numbers is concerning. It could be a sign of differential attrition (higher attrition in the "high draft" group) can can bias our estimate**
+
 h. Tell a concrete story about what could be leading to the result in part (g).
 i. Tell a concrete story about how this differential attrition might bias our estimates.
 
-```{r, echo=FALSE}
-d2 <- fread("./data/ps5_no2.csv")
-
-```
 
 # 3. Dinner Plates 
 
@@ -101,7 +263,11 @@ Suppose that researchers are concerned with the health consequences of what peop
 A statistical test shows that the apparent treatment effect is far greater than one would expect by chance. The authors conclude that a minor adjustment, reducing plate size, will help people lose weight. 
 
 - How convincing is the evidence regarding the effect of plate size of what people eat and how much they weight? 
+Answer: The experiment measures the impact of plate size on the amount of food consumed. That direct impact is easy to observe, measure and believe in. ** The leap from that conclusion to the broader and more general conclusion about "weight management ~ plate size" is difficult to believe.**  
+**Weight and Weight control is a fairly complex topic and is effected by a lot of personal and environmental variables. Generalizing it from an observation on quantity of food may not be accurate**
+
 - What design and measurment improvements do you suggest? 
+**Answer**
 
 # 4. Think about Treatment Effects 
 
