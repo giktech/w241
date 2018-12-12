@@ -28,9 +28,8 @@ library(COUNT)
 library(lmtest)
 library(sandwich)
 library(multiwayvcov)
-library(stargazer)
 ```
-
+### Loading the data for Q1
 ```{r}
 d1 <- fread('./data/ps5_no1.csv')
 d1
@@ -61,6 +60,16 @@ Simplifying assumptions you should make when answering this problem:
 
 ## a. Run a crosstab of total_ad_exposures_week1 and treatment_ad_exposures_week1 to sanity check that the distribution of impressions looks as it should. Does it seem reasonable? Why does it look like this? (No computation required here, just a brief verbal response.)
 
+### Checking the distribution of treatment and total expressions  
+
+```{r, message=FALSE}
+plot(d1$total_ad_exposures_week1, d1$treatment_ad_exposures_week1)
+```
+
+```{r}
+table(d1$total_ad_exposures_week1, d1$treatment_ad_exposures_week1 )
+```
+
 ```{r}
 # Histograms for treatment_ad_exposures_week1 & total_ad_exposures_week1
 hist(d1$total_ad_exposures_week1,  ylim = c(0, 160000), col = "blue", border = F, main = "total_ad_exposures_week1", xlab = "Number of ad exposures during the campaign", density=30, angle = 120)
@@ -81,7 +90,13 @@ paste0('Mean number of total exposures: ', mte )
 mtt = sum(d1$treatment_ad_exposures_week1/nrow(d1))
 paste0('Mean number of treatment exposures: ', mtt )
 ```
-**Answer: TBD The distribution seems reasonable. Everyone in the study as 0-6 exposures to any ad. The distribution looks normal. Each of the exposure could be on an even or odd second. On even second a participant would see the "treatment" ad**
+```{r}
+
+```
+
+
+**Answer: The distribution seems reasonable. The total number of ad expressions in a week are a normal distribution. The treatment expressions are a subset of total ad expressions in the week (0-6) and form a binomial distribution.The probability of getting treatment 6 times in a week is smaller than getting 1, which results in distributions like above **
+
 
 ## b. Your colleague proposes the code printed below to analyze this experiment: 
 `lm(week1 ~ treatment_ad_exposures_week1, data)` You are suspicious. Run a placebo test with the prior week’s purchases as the outcome and report the results. Did the placebo test “succeed” or “fail”? Why do you say so?
@@ -91,9 +106,9 @@ paste0('Mean number of treatment exposures: ', mtt )
 lr1b = lm(week1 ~ treatment_ad_exposures_week1, data = d1)
 summary(lr1b)
 ```
-### We are suspicious. Running a placebo test. First picking folks who saw no treatment ads but saw other ads as the placebo group
+### We are suspicious. Running a placebo test. The PLACEBO broup could be folks who saw no treatment ads but saw other ads
 ```{r}
-# Picking people with 0 treatment ad exposure but > 0 total add exposure
+# Picking people with 0 treatment ad exposure but > 0 total ad exposure
 d1b = d1[which(d1$treatment_ad_exposures_week1 == 0 & d1$total_ad_exposures_week1 > 0),]
 paste0("Number of folks with no treatment ad exposure: ", nrow(d1b))
 paste0("ratio of folks with no treatment ad exposure: ", nrow(d1b)/nrow(d1))
@@ -105,10 +120,31 @@ paste0("ratio of folks with no treatment ad exposure: ", nrow(d1b)/nrow(d1))
 lr1b1 = lm(week0 ~ total_ad_exposures_week1, data = d1b)
 summary(lr1b1)
 ```
+### Other ways to do the placebo: Regressing prior's week revenue on treatment or all ad exposures for the entire group(as there's no way to know who got the treatment in week0. Also assuming that the exposures to ads remains about the same from prior weeks)
+```{r}
+lr1b2 = lm(week0 ~ treatment_ad_exposures_week1, data = d1)
+summary(lr1b2)
+```
+```{r}
+lr1b3 = lm(week0 ~ total_ad_exposures_week1, data = d1)
+summary(lr1b3)
+```
 
 
-c. The placebo test suggests that there is something wrong with our experiment or our data analysis. We suggest looking for a problem with the data analysis. Do you see something that might be spoiling the randomness of the treatment variable? How can you improve your analysis to get rid of this problem? Why does the placebo test turn out the way it does? What one thing needs to be done to analyze the data correctly? Please provide a brief explanation of why, not just what needs to be done. (*Note: This question, and verifying that you answered it correctly in part d below, may require some thinking. If we find many people can’t figure it out, we will post another hint in a few days.*)
+**All forms of the test suggest an impact of ads (treatment or really any ad) on prior week's revenue. I'll call the test a "fail" as it demonstrates an impact on outcome (revenue increase) which is not caused by treatment and not captured by any other variable in the analysis**
+
+c. The placebo test suggests that there is something wrong with our experiment or our data analysis. We suggest looking for a problem with the data analysis. Do you see something that might be spoiling the randomness of the treatment variable? How can you improve your analysis to get rid of this problem? Why does the placebo test turn out the way it does? What one thing needs to be done to analyze the data correctly? Please provide a brief explanation of why, not just what needs to be done. (*Note: This question, and verifying that you answered it correctly in part d below, may require some thinking. If we find many people can’t figure it out, we will post another hint in a few days.*)  
+**Answer: The placebo test suggest the total ad exposures (no treatment exposures) or treatment exposures having an impact on the prior week's sales.**    
+**Something that may be spoiling the randomness of treatment variable may be the inclination of already heavy shoppers to see more total exposures which inturn leads to more treatment exposures**  
+**TBD, how to restore randomness**  
+**The Placebo test turns out this way as frequent shoppers are frequent visitors to the website, which leads higher chances of being exposed to both the treatment and non-treatment ads**  
+**One way to improve the analysis would be to treat the prior week's sales as a baseline and a co-variate in the analysis. This separates the impact of baseline behavior from what is caused by the exposure to treatment ads**    
+
 d. Implement the procedure you propose from part (c), run the placebo test for the Week 0 data again, and report the results. (This placebo test should pass; if it does not, re-evaluate your strategy before wasting time proceeding.)
+```{r}
+
+```
+
 e. Now estimate the causal effect of each ad exposure on purchases during the week of the campaign itself using the same technique that passed the placebo test in part (d).
 f. The colleague who proposed the specification in part (b) challenges your results -- they make the campaign look less successful. Write a paragraph that a layperson would understand about why your estimation strategy is superior and his/hers is biased.
 g. Estimate the causal effect of each treatment ad exposure on purchases during and after the campaign, up until week 10 (so, total purchases during weeks 1 through 10).
@@ -155,12 +191,12 @@ summary(d2)
 lr2a = lm(income ~ years_education, data = d2)
 summary(lr2a)
 ```
-**Answer: The naive regressions suggests that every  year of additional education causes a $5750.48(83.34) bump in income. The regression also shows a very confident result and significant result (the SE is almost 1/50th of the impact)**
+**Answer: The naive regressions suggests that every  year of additional education leads to a $5750.48(83.34) bump in income. This looks like a significant result (the SE is almost 1/50th of the impact)**
 
 
 ## b. Continue to suppose that we did not run the experiment, but that we saw the result that you noted in part (a). Tell a concrete story about why you don't believe that observational result tells you anything causal.  
 
-**Answer: A story could be that "years of education" is not really a cause, but an effect of other causal factors like wealth in the family, education in the family and the environment. These causal factors have a positive impact on wealth and "years of education" in a very similar way. An example could be a teenager raised in an academic family that also provides seed funds to startups. This teenager would be expected to go to college and can also use some of the family wealth and connections to create more**
+**Answer: A story could be that "years of education" is not the only or the biggest cause. Other factors like "wealth in the family", "education in the family"" and the "environment" could have similar impact on both "education" and "income".An example could be a teenager raised in an academic family that also provides seed funds to startups. This teenager would be expected to go to college and can also use some of the family wealth and connections to create more**
 
 
 ## c. Now, let’s get to using the natural experiment. We will define “having a high-ranked draft number” as having a draft number of 80 or below (1-80; numbers 81-365, for the remaining 285 days of the year, can be considered “low-ranked”). Create a variable in your dataset indicating whether each person has a high-ranked draft number or not. Using regression, estimate the effect of having a high-ranked draft number, the dummy variable you’ve just created, on years of education obtained. Report the estimate and a correctly computed standard error. (*Hint: Pay special attention to calculating the correct standard errors here. They should match how the draft is conducted.)
@@ -214,9 +250,9 @@ paste0("The impact of education on income: ", eI)
 ```
 **Answer: The result suggest that each year of education has an impact of adding $3123.55 to the income. This is less than the estimate we got from the naive regression (regression of income on education without considering the instrument)**
 
-## f. Natural experiments rely crucially on the “exclusion restriction” assumption that the instrument (here, having a high draft rank) cannot affect the outcome (here, income) in any other way except through its effect on the “endogenous variable” (here, education). Give one reason this assumption may be violated -- that is, why having a high draft rank could affect individuals’ income other than because it nudges them to attend school for longer.
-**TB
-D**
+## f. Natural experiments rely crucially on the “exclusion restriction” assumption that the instrument (here, having a high draft rank) cannot affect the outcome (here, income) in any other way except through its effect on the “endogenous variable” (here, education). Give one reason this assumption may be violated -- that is, why having a high draft rank could affect individuals’ income other than because it nudges them to attend school for longer.  
+**Answer: High "draft rank" could have an impact on income aside from the nudge for higher education. This impact could be positive or negative. Lets assume that some of the folks in the high draft rank get enrolled to fight. The descipline and mental strenght from the Army days could lead to more resilience in the business setting, leading to higher income. A negative impact could also happen if going to war leads to injuy and falling out of the employment pool**
+
 ## g. Conduct a test for the presence of differential attrition by treatment condition. That is, conduct a formal test of the hypothesis that the “high-ranked draft number” treatment has no effect on whether we observe a person’s income. (Note, that an earning of $0 *actually* means they didn't earn any money.)
 
 ### We could test if the observations differ greatly between the treatment and control groups
@@ -237,7 +273,7 @@ legend('topright',c('High draft numbers','Low draft numbers'),
        border = NA)
 
 ```
-** A skew towards lower income in both the groups**
+** A skew towards lower income in both the groups. Long tail towards the higher incomes**
 
 ### Distribution of years_education in control and treatment
 ```{r}
@@ -250,27 +286,56 @@ legend('topright',c('High draft numbers','Low draft numbers'),
 ```
 **We see the skew towards higher education in our sample of High draft numbers**
 
-**Answer: The vast difference in the number of observations for low draft numbers is concerning. It could be a sign of differential attrition (higher attrition in the "high draft" group) can can bias our estimate**
+**Answer: The vast difference in the number of observations is concerning. The histogram shows that control(low draft numbers) has 5 times the number of observations.It could be a sign of differential attrition (higher attrition in the "high draft" group) and can bias our estimate**
+**We cannot be sure of above statement though. We have an artificial cut off at 80 to determine the draft number, which may be what's causing the different number of observations**
 
-h. Tell a concrete story about what could be leading to the result in part (g).
-i. Tell a concrete story about how this differential attrition might bias our estimates.
+## h. Tell a concrete story about what could be leading to the result in part (g).
+** Answer: We're assuming that the comparatively low number of observations in the treatment group are a sign of attrition. This low number or attrition could be because a large part of that group was actually drafted, went to war and was not observable at the time of the study. The attrition could be due to death, injury or physical displacement after the war**
+
+## i. Tell a concrete story about how this differential attrition might bias our estimates.  
+** Answer: The differential attrition could lead to a bial. Here's how**.
+For "low draft" numbers, we are able to observe a high number of subjects. The histogram shows that they are normally distributed from low to high incomes and education. This represents almost any population. Same is not the case for "high draft".  
+Many of the folks with "high draft"" numbers are actually drafted and go to war. Some of them are not observable in the employment pool after the war (Injury, retirement, Death etc). The folks from the "high draft" pool that are observable, fall in 2 categories: **
+1. Those that are able to bail out of the war by enrolling in higher education
+2. Those that come back more desciplined from the war, are inspired by other folks and enroll in higher education to make up for the lost time
+In both 1 and 2, we may be looking at a higher motivation to study and/or earn when compared to folks that chose to go to the war. One would intuitively think that this group will continue to show a bias towards higher income.
 
 
 # 3. Dinner Plates 
 
-Suppose that researchers are concerned with the health consequences of what people eat and how much they weigh. Consider an experiment designed to measure the effect of a proposal to healp people diet. Subjects are invited to a dinner and are randomly given regular-sized or slightly larger than regular sized plates. Hidden cameras record how much people eat, and the researchers find that those given larger plates eat substantially more food than those assigned small plates. 
+Suppose that researchers are concerned with the health consequences of what people eat and how much they weigh. Consider an experiment designed to measure the effect of a proposal to help people diet. Subjects are invited to a dinner and are randomly given regular-sized or slightly larger than regular sized plates. Hidden cameras record how much people eat, and the researchers find that those given larger plates eat substantially more food than those assigned small plates. 
 
 A statistical test shows that the apparent treatment effect is far greater than one would expect by chance. The authors conclude that a minor adjustment, reducing plate size, will help people lose weight. 
 
-- How convincing is the evidence regarding the effect of plate size of what people eat and how much they weight? 
-Answer: The experiment measures the impact of plate size on the amount of food consumed. That direct impact is easy to observe, measure and believe in. ** The leap from that conclusion to the broader and more general conclusion about "weight management ~ plate size" is difficult to believe.**  
-**Weight and Weight control is a fairly complex topic and is effected by a lot of personal and environmental variables. Generalizing it from an observation on quantity of food may not be accurate**
+## How convincing is the evidence regarding the effect of plate size of what people eat and how much they weight?  
 
-- What design and measurment improvements do you suggest? 
-**Answer**
+**Answer**: The experiment measures the impact of larger plate size on the amount of food consumed. That direct impact is easy agree with. ** The leap from that conclusion to the broader and more general conclusion about "weight management ~ plate size" is not convincing due the following:**
+1. The experiment does not test a "reduction" in the plate sizes. The only observations are around the "increase" from the "normal" size 
+2. Weight and Weight control are fairly complex topics and are effected by a lot of personal and environmental variables. Generalizing weight management from an observation on quantity of food may not be accurate even if we tested with smaller and larger plates
+
+## - What design and measurment improvements do you suggest? 
+**Answer: The following improvements could be made: **
+1. Measure plate sizes smaller and larger than the "normal"
+2. Measure the pre-experiment (baseline) parameters like "amount of food", "health/disease" and activity levels" and check if they are distributed evenly among control and treatment
+3. Measure the same parameters post-experiment and check if the distribution remains even and the same as before the treatment
+5. Check that the outcome measures (weight) are equivalently distributed among treatment and control
+6. Include some of the pre-experiment baseline measurements like "weight" and "activity" in the model, especially if its hard to get an even distribution among control and treatment
 
 # 4. Think about Treatment Effects 
 
-Throughout this course we have focused on the average treatment effect. Think back to *why* we are concerned about the average treatment effect. What is the relationship between an ATE, and some individuals' potential outcomes? Make the strongest case you can for why this is *good* measure. 
+## Throughout this course we have focused on the average treatment effect. Think back to *why* we are concerned about the average treatment effect. What is the relationship between an ATE, and some individuals' potential outcomes? Make the strongest case you can for why this is *good* measure. 
+
+**Answer**
+A method to estimate ATE is to find the difference in averages between the treated and the untreated. This is useful as we mostly cannot observe a subject in treatment and control at the same time (though in some cases its possible at different times). The ATE gives us an unbiased estimate if the assignment to "treatment" and "control" is random, "treatment" is the only causal reason for the effect and the subjects do not interfere with each other. 
+
+ATE is an estimate for the population. *An individual's potential outcome could be very different from the average (ATE)*. Its relationship with the ATE cannot be "precisely" measured. We can get estimates of the relationship by using the following:  
+
+1. Measure the variance in treatment effect by trying pair subjects in control and treatment
+2. Identify characteristics that distinguish the subjects and find the impact by varying such characteristics
+
+While not precise on individual outcomes, this is still a *good* measure for the following reasons:
+1. 
+
+
 
 
