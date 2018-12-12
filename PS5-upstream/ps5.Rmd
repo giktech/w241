@@ -133,27 +133,73 @@ summary(lr1b3)
 
 **All forms of the test suggest an impact of ads (treatment or really any ad) on prior week's revenue. I'll call the test a "fail" as it demonstrates an impact on outcome (revenue increase) which is not caused by treatment and not captured by any other variable in the analysis**
 
-c. The placebo test suggests that there is something wrong with our experiment or our data analysis. We suggest looking for a problem with the data analysis. Do you see something that might be spoiling the randomness of the treatment variable? How can you improve your analysis to get rid of this problem? Why does the placebo test turn out the way it does? What one thing needs to be done to analyze the data correctly? Please provide a brief explanation of why, not just what needs to be done. (*Note: This question, and verifying that you answered it correctly in part d below, may require some thinking. If we find many people can’t figure it out, we will post another hint in a few days.*)  
+## c. The placebo test suggests that there is something wrong with our experiment or our data analysis. We suggest looking for a problem with the data analysis. Do you see something that might be spoiling the randomness of the treatment variable? How can you improve your analysis to get rid of this problem? Why does the placebo test turn out the way it does? What one thing needs to be done to analyze the data correctly? Please provide a brief explanation of why, not just what needs to be done. (*Note: This question, and verifying that you answered it correctly in part d below, may require some thinking. If we find many people can’t figure it out, we will post another hint in a few days.*)  
 **Answer: The placebo test suggest the total ad exposures (no treatment exposures) or treatment exposures having an impact on the prior week's sales.**    
 **Something that may be spoiling the randomness of treatment variable may be the inclination of already heavy shoppers to see more total exposures which inturn leads to more treatment exposures**  
 **TBD, how to restore randomness**  
 **The Placebo test turns out this way as frequent shoppers are frequent visitors to the website, which leads higher chances of being exposed to both the treatment and non-treatment ads**  
-**One way to improve the analysis would be to treat the prior week's sales as a baseline and a co-variate in the analysis. This separates the impact of baseline behavior from what is caused by the exposure to treatment ads**    
+**One way to improve the analysis would be to include the total_ad_exposures as a co-variate. This should capture the baseline effect of folks that get more exposures by being more active shoppers. Another way would be to treat the prior week's sales as a baseline and a co-variate. This also separates the impact of baseline behavior from what is caused by the exposure to treatment ads**    
 
-d. Implement the procedure you propose from part (c), run the placebo test for the Week 0 data again, and report the results. (This placebo test should pass; if it does not, re-evaluate your strategy before wasting time proceeding.)
+## d. Implement the procedure you propose from part (c), run the placebo test for the Week 0 data again, and report the results. (This placebo test should pass; if it does not, re-evaluate your strategy before wasting time proceeding.)
 ```{r}
+lr1d = lm(week0 ~ treatment_ad_exposures_week1 + total_ad_exposures_week1, data = d1)
+summary(lr1d)
+```
+### The test above does not show the treatment (placebo in this case) having an impact on prior week's revenue
+
+## e. Now estimate the causal effect of each ad exposure on purchases during the week of the campaign itself using the same technique that passed the placebo test in part (d).
+```{r}
+lr1e = lm(week1 ~ treatment_ad_exposures_week1 + total_ad_exposures_week1, data = d1)
+summary(lr1e)
+```
+**Answer: Each ad exposure causes a .056(.0046) increase in the week 1 revenue.**
+*This is a much smaller effect than we saw from friend's analsis in "b"*
+
+## f. The colleague who proposed the specification in part (b) challenges your results -- they make the campaign look less successful. Write a paragraph that a layperson would understand about why your estimation strategy is superior and his/hers is biased.  
+**Answer: We are trying to estimate the impact of ads on the sales of product "a" during and after the campaign. Strategy one does a simple analysis of sales on the quantity of exposure to ads for product "a". While the folks are chosen randomly for treatment (ads for product "a"), we'll still end up with a biased estimate as folks who shop more would see more ads of any kind and so more ads for treatment i.e. there chances of being in treatment are higher (because of the method by which treatment is assigned: when you hit the website on an even second). Strategy 2 fixes this by extracting the baseline effect of shopping inclination, which is reflected in the exposure to any of the ads. With the effect of "any ad" separated out, what's left is the incremental effect of the ads of product "a" only. Strategy 2 thus gives us a more accurate estimate**
+
+## g. Estimate the causal effect of each treatment ad exposure on purchases during and after the campaign, up until week 10 (so, total purchases during weeks 1 through 10).
+
+### Adding a variable that's sum of all purchases (week 1-10)
+```{r}
+d1$total_purchases = rowSums(d1[,c(5,6,7,8,9,10,11,12,13,14)]) 
+head(d1)
+summary(d1)
+```
+### Calculating the impact of Week 1 exposure on purchases for 10 weeks
+```{r}
+lr1g = lm(total_purchases ~ treatment_ad_exposures_week1 + total_ad_exposures_week1, data = d1)
+summary(lr1g)
 
 ```
+**Answer: The impact is 0.01274 (0.01758) which is not significant**
 
-e. Now estimate the causal effect of each ad exposure on purchases during the week of the campaign itself using the same technique that passed the placebo test in part (d).
-f. The colleague who proposed the specification in part (b) challenges your results -- they make the campaign look less successful. Write a paragraph that a layperson would understand about why your estimation strategy is superior and his/hers is biased.
-g. Estimate the causal effect of each treatment ad exposure on purchases during and after the campaign, up until week 10 (so, total purchases during weeks 1 through 10).
-h. Estimate the causal effect of each treatment ad exposure on purchases only after the campaign.  That is, look at total purchases only during week 2 through week 10, inclusive.
-i. Tell a story that could plausibly explain the result from part (h).
-j. Test the hypothesis that the ads for product B are more effective, in terms of producing additional revenue in week 1 only, than are the ads for product A.
+## h. Estimate the causal effect of each treatment ad exposure on purchases only after the campaign.  That is, look at total purchases only during week 2 through week 10, inclusive.
+
+### Adding a variable for purchases from week 2-10
+```{r}
+d1$pur_week_2_10 = rowSums(d1[,c(6,7,8,9,10,11,12,13,14)]) 
+head(d1)
+summary(d1)
+```
+### Calculating the impact of Week 1 exposure on purchases after that week (2-10)
+```{r}
+lr1h = lm(pur_week_2_10 ~ treatment_ad_exposures_week1 + total_ad_exposures_week1, data = d1)
+summary(lr1h)
+
+```
+**Answer: The impact is -0.04360 (0.01684) i.e a decrease of .04 for each exposure to ad in week 1**
+
+##i. Tell a story that could plausibly explain the result from part (h).
+**Answer: Lets assume that there's a limit to how much a customer or market can buy in a certain time period (say 10 weeks). This could be due to need or financial capacity. If all of that latent purchasing is accelerated due to the ad campaign in week 1, we'll see less than natural buying in later weeks. I think that's what's happening in this experiment**
+The ads motivate people to buy in the week of the ads or immediately after. That demand is taken out of the system in weeks 2-10. 
+**The ads are not a lost cause though. There is some positive impact when we look at the aggregate purchases from weeks 1-10. This is the purchasing that would not have happened without the ads. These are people who did not know about the product earlier or were not clear of the need.**
+The +ve impact is not as big as week 1 but is also not -ve as we see from weeks 2-10.
+
+## j. Test the hypothesis that the ads for product B are more effective, in terms of producing additional revenue in week 1 only, than are the ads for product A.
 (*Hint: The easiest way to do this is to throw all of the observations into one big regression and specify that regression in such a way that it tests this hypothesis.*)
 (*Hint 2: There are a couple defensible ways to answer this question that lead to different answers. Don’t stress if you think you have an approach you can defend.*)
-k. You notice that the ads for product A included celebrity endorsements. How confident would you be in concluding that celebrity endorsements increase the effectiveness of advertising at stimulating immediate purchases?
+## k. You notice that the ads for product A included celebrity endorsements. How confident would you be in concluding that celebrity endorsements increase the effectiveness of advertising at stimulating immediate purchases?
 
 # 2. Vietnam Draft Lottery 
 A [famous paper](http://sites.duke.edu/niou/files/2011/06/Angrist_lifetime-earningsmall.pdf) by Angrist exploits the randomized lottery for the Vietnam draft to estimate the effect of education on wages. (*Don’t worry about reading this article, it is just provided to satisfy your curiosity; you can answer the question below without referring to it. In fact, it may be easier for you not to, since he has some complications to deal with that the simple data we’re giving you do not.*)
